@@ -1,0 +1,146 @@
+#!/bin/sh
+ 
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+wcdiff=0
+wclvls=0
+ 
+PROGNAME=`basename $0`
+VERSION="Version 1.0,"
+AUTHOR="2010, RICHARD Jérôme (http://blog.ologr.eu/)"
+ 
+print_version() {
+    echo "$VERSION $AUTHOR"
+}
+ 
+print_help() {
+    echo ""
+    echo "$PROGNAME - Check memory plugin for Nagios using /proc/meminfo"
+    echo "It return memory (used,cached,buffers,free in ko)"
+    echo "It consider that cached and buffers are NOT used memory"
+    echo ""
+    echo "Usage $PROGNAME [-w/--warning] [-c/--critical]"
+    echo "Options:"
+    echo "  -w/--warning"
+    echo "     Warning level in % of used memory"
+    echo "  -c/--critical"
+    echo "     Critical level in % of used memory"
+    echo "  -v/--version"
+    echo "     Display version"
+    echo "  -h/--help"
+    echo "     Display this help"
+    exit $STATE_UNKNOWN
+}
+ 
+val_wcdiff() {
+    if [ ${lv_wr} -gt ${lv_cr} ]
+    then
+        wcdiff=1
+    fi
+}
+ 
+val_wclvls() {
+        if [ "$lv_wr" -lt 0 -o "$lv_wr" -gt 100 -o "$lv_cr" -lt 0 -o "$lv_cr" -gt 100 ]
+        then
+            wclvls=1
+            val_wcdiff
+        fi
+}
+ 
+while test -n "$1"; do
+    case "$1" in
+        --help|-h)
+            print_help
+            exit $ST_UK
+            ;;
+        --version|-v)
+            print_version $PROGNAME $VERSION
+            exit $ST_UK
+            ;;
+        --warning|-w)
+            lv_wr=$2
+            shift
+            ;;
+        --critical|-c)
+            lv_cr=$2
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            print_help
+            exit $ST_UK
+            ;;
+    esac
+    shift
+done
+ 
+if [ ! -z "$lv_wr" -a ! -z "$lv_cr" ]
+then
+    val_wcdiff
+    val_wclvls
+fi
+ 
+if [ $wcdiff = 1 ]
+then
+    echo "Please adjust levels. The critical level must be higher than the warning level!"
+    if [ $wclvls = 1 ]
+    then
+        echo "Warning and critical level values must be between 0 and 100."
+    fi
+    exit $ST_UK
+fi
+ 
+if [ $wclvls = 1 ]
+then
+    echo "Warning and critical level values must be between 0 and 100."
+    exit $ST_UK
+fi
+ 
+#calcul
+MEM_TOTAL=`grep "^MemTotal" /proc/meminfo|awk '{print $2}'`
+MEM_TOTAL=`echo $(($MEM_TOTAL * 1024))`
+MEM_FREE=`grep "^MemFree" /proc/meminfo|awk '{print $2}'`
+MEM_FREE=`echo $(($MEM_FREE * 1024))`
+BUFFERS=`grep "^Buffers" /proc/meminfo|awk '{print $2}'`
+BUFFERS=`echo $(($BUFFERS * 1024))`
+CACHED=`grep "^Cached" /proc/meminfo|awk '{print $2}'`
+CACHED=`echo $(($CACHED * 1024))`
+MEM_USED=`expr $MEM_TOTAL - $MEM_FREE - $CACHED - $BUFFERS`
+ 
+P_MEM_FREE=`echo $(( $MEM_FREE * 100 / $MEM_TOTAL))`
+P_CACHED=`echo $(( 100 * $CACHED / $MEM_TOTAL))`
+P_BUFFERS=`echo $(( 100 * $BUFFERS / $MEM_TOTAL))`
+P_MEM_USED=`echo $((100 - $P_MEM_FREE - $P_CACHED - $P_BUFFERS))`
+ 
+#for beautifful display
+MMEM_TOTAL=`echo $(($MEM_TOTAL / 1048576))`
+MMEM_FREE=`echo $(($MEM_FREE / 1048576))`
+MBUFFERS=`echo $(($BUFFERS / 1048576))`
+MCACHED=`echo $(($CACHED / 1048576))`
+MMEM_USED=`echo $(($MEM_USED / 1048576))`
+ 
+RETURN_MES=`echo "- Total: $MMEM_TOTAL Mo, Used: $MMEM_USED Mo ($P_MEM_USED%), Cached: $MCACHED Mo ($P_CACHED%), Buffers: $MBUFFERS Mo ($P_BUFFERS%), Free: $MMEM_FREE Mo ($P_MEM_FREE%) | total=$MEM_TOTAL used=$MEM_USED cached=$CACHED buffers=$BUFFERS free=$MEM_FREE"`
+ 
+ 
+#Return
+   if [ ! -z "$lv_wr" -a ! -z "$lv_cr" ]
+    then
+        if [ ${P_MEM_USED} -ge ${lv_wr} -a ${P_MEM_USED} -lt ${lv_cr} ]
+        then
+            echo "Memory WARNING $RETURN_MES"
+            exit $STATE_WARNING
+        elif [ ${P_MEM_USED} -ge ${lv_cr} ]
+        then
+            echo "Memory CRITICAL $RETURN_MES"
+            exit $STATE_CRITICAL
+        else
+            echo "Memory OK $RETURN_MES"
+            exit $STATE_OK
+        fi
+    else
+        echo "OK $RETURN_MES"
+        exit $STATE_OK
+    fi
+fi

@@ -1,0 +1,113 @@
+#!/bin/bash
+
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+wcdiff=0
+
+
+PROGNAME=`basename $0`
+VERSION="Version 1.0,"
+AUTHOR="2015, ANDROZ Mathieu"
+
+TITLE="Memcached available memory"
+
+print_version() {
+    echo "$VERSION $AUTHOR"
+}
+
+print_help() {
+    echo ""
+    echo "$PROGNAME - Check Memcached available memory through memcached stats"
+    echo "It returns the pourcentage of available memory"
+    echo ""
+    echo "Usage $PROGNAME [-w/--warning] [-c/--critical]"
+    echo "Options:"
+    echo "  -w/--warning"
+    echo "     Warning level of available memory percentage"
+    echo "  -c/--critical"
+    echo "     Critical level of available memory percentage"
+    echo "  -v/--version"
+    echo "     Display version"
+    echo "  -h/--help"
+    echo "     Display this help"
+    exit $STATE_UNKNOWN
+}
+
+val_wcdiff() {
+    if [ ${lv_wr} -le ${lv_cr} ]
+    then
+        wcdiff=1
+    fi
+}
+
+while test -n "$1"; do
+    case "$1" in
+        --help|-h)
+            print_help
+            exit $ST_UK
+            ;;
+        --version|-v)
+            print_version $PROGNAME $VERSION
+            exit $ST_UK
+            ;;
+        --warning|-w)
+            lv_wr=$2
+            shift
+            ;;
+        --critical|-c)
+            lv_cr=$2
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            print_help
+            exit $ST_UK
+            ;;
+    esac
+    shift
+done
+
+if [ ! -z "$lv_wr" -a ! -z "$lv_cr" ]
+then
+    val_wcdiff
+fi
+
+if [ $wcdiff = 1 ]
+then
+    echo "Please adjust levels. The critical level must be lower than the warning level!"
+    exit $ST_UK
+fi
+
+# Calcul
+MEMCACHED_MAXMEM=$(echo "stats" | nc 127.0.0.1 11211 -q 1 | grep -E "^STAT limit_maxbytes " | tr -d '\r' | awk '{print $3}')
+MEMCACHED_MEMUSED=$(echo "stats" | nc 127.0.0.1 11211 -q 1 | grep -E "^STAT bytes " | tr -d '\r' |awk '{print $3}')
+MEMCACHED_VAL=$(echo "${MEMCACHED_MEMUSED} / ${MEMCACHED_MAXMEM} * 100" | bc -l)
+MEMCACHED_MEMPERCENT=$(echo ${MEMCACHED_VAL} | awk -F"." '{print $1}')
+if [ -z ${MEMCACHED_MEMPERCENT} ]; then
+	  MEMCACHED_MEMPERCENT=0
+fi
+MEMCACHED_FREEMEM=$(echo "100 - ${MEMCACHED_MEMPERCENT}" | bc -l)
+RETURN_MES=$(echo "- Memcached available memory : ${MEMCACHED_FREEMEM}% | memcached_available_memory=${MEMCACHED_FREEMEM};${lv_wr};${lv_cr};0")
+
+
+#Return
+if [ ! -z "$lv_wr" -a ! -z "$lv_cr" ]
+then
+  if [ ${MEMCACHED_FREEMEM} -le ${lv_wr} -a ${MEMCACHED_FREEMEM} -gt ${lv_cr} ]
+  then
+    echo "${TITLE} WARNING $RETURN_MES"
+    exit $STATE_WARNING
+  elif [ ${MEMCACHED_FREEMEM} -le ${lv_cr} ]
+  then
+    echo "${TITLE} CRITICAL $RETURN_MES"
+    exit $STATE_CRITICAL
+  else
+    echo "${TITLE} OK $RETURN_MES"
+    exit $STATE_OK
+  fi
+else
+  echo "OK $RETURN_MES"
+  exit $STATE_OK
+fi

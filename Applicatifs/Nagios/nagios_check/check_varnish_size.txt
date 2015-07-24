@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# Filename : check_varnish_size.sh
+# Version  : 1.0
+# Author   : mathieu androz
+# Contrib  : 
+# Description :
+#  . Check if Varnish's cache size is well configured
+#  . If value = 0 -->  OK
+#  . Elif value > 0 --> increase cache size
+#
+
+# Exit codes
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+STATE_DEPENDENT=4
+
+usage() {
+    echo "Explanation : The value must be 0."
+    echo "So, Warning value must be set to 1 !"
+    echo ""
+    echo "Usage: $0 [-w|--warning <warn>] [-c|--critical <crit>]"
+}
+
+#Check arguments print help
+if [ $# -lt 1 ]; then
+    usage && exit $STATE_UNKNOWN
+fi
+
+
+#GET ARGUMENTS
+while test -n "$1"; do
+    case "$1" in
+        --help|-h)
+            usage && exit $STATE_OK
+            ;;
+        --warning|-w)
+            warn=$2
+            shift
+            ;;
+        --critical|-c)
+            crit=$2
+            shift
+            ;;
+    esac
+   shift
+done
+
+#Execute the command to get the value of lru_nuked
+result=$(varnishstat -1 -f n_lru_nuked | awk '{print $2}')
+
+if [ $result -ge $warn ]; then
+        OUTPUT="WARNING - Varnish's Cache is almost full = $result"
+        exitstatus=$STATE_WARNING
+fi
+
+if [ $result -ge $crit ]; then
+        OUTPUT="CRITICAL - Varnish's Cache is full = $result"
+        exitstatus=$STATE_CRITICAL
+fi
+
+if [ $result -lt $warn ];then
+   OUTPUT="OK - Varnish's Cache is OK = $result"
+   exitstatus=$STATE_OK
+fi
+
+#if [ $perfdata -eq 1 ]; then
+#    OUTPUT="$OUTPUT|Cache_Size=$result"
+#fi
+
+
+echo $OUTPUT
+exit $exitstatus
+

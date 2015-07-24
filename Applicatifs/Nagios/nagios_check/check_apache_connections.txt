@@ -1,0 +1,106 @@
+#!/bin/sh
+
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+wcdiff=0
+
+
+PROGNAME=`basename $0`
+VERSION="Version 1.0,"
+AUTHOR="2014, ANDROZ Mathieu"
+
+print_version() {
+    echo "$VERSION $AUTHOR"
+}
+
+print_help() {
+    echo ""
+    echo "$PROGNAME - Check Apache plugin for Nagios using netstat"
+    echo "It return the count of globale Apache connections"
+    echo ""
+    echo "Usage $PROGNAME [-w/--warning] [-c/--critical]"
+    echo "Options:"
+    echo "  -w/--warning"
+    echo "     Warning level of connection number"
+    echo "  -c/--critical"
+    echo "     Critical level of connection number"
+    echo "  -v/--version"
+    echo "     Display version"
+    echo "  -h/--help"
+    echo "     Display this help"
+    exit $STATE_UNKNOWN
+}
+
+val_wcdiff() {
+    if [ ${lv_wr} -ge ${lv_cr} ]
+    then
+        wcdiff=1
+    fi
+}
+
+while test -n "$1"; do
+    case "$1" in
+        --help|-h)
+            print_help
+            exit $ST_UK
+            ;;
+        --version|-v)
+            print_version $PROGNAME $VERSION
+            exit $ST_UK
+            ;;
+        --warning|-w)
+            lv_wr=$2
+            shift
+            ;;
+        --critical|-c)
+            lv_cr=$2
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            print_help
+            exit $ST_UK
+            ;;
+    esac
+    shift
+done
+
+if [ ! -z "$lv_wr" -a ! -z "$lv_cr" ]
+then
+    val_wcdiff
+fi
+
+if [ $wcdiff = 1 ]
+then
+    echo "Please adjust levels. The critical level must be higher than the warning level!"
+    exit $ST_UK
+fi
+
+# Calcul
+APACHE_COUNT=$(netstat -an | grep -E "(:80|:443)" | awk '{print $5}' | awk -F: '{print $1}' | wc -l)
+
+RETURN_MES=$(echo "- Connections : ${APACHE_COUNT} | apache_connections_number=${APACHE_COUNT};${lv_wr};${lv_cr};0")
+
+
+#Return
+   if [ ! -z "$lv_wr" -a ! -z "$lv_cr" ]
+    then
+        if [ ${APACHE_COUNT} -ge ${lv_wr} -a ${APACHE_COUNT} -lt ${lv_cr} ]
+        then
+            echo "Apache connection number WARNING $RETURN_MES"
+            exit $STATE_WARNING
+        elif [ ${APACHE_COUNT} -ge ${lv_cr} ]
+        then
+            echo "Apache connection number CRITICAL $RETURN_MES"
+            exit $STATE_CRITICAL
+        else
+            echo "Apache connections number OK $RETURN_MES"
+            exit $STATE_OK
+        fi
+    else
+        echo "OK $RETURN_MES"
+        exit $STATE_OK
+    fi
+fi
