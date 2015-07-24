@@ -53,20 +53,36 @@ installPackage() {
     fi
 }
 
-recoverSF() {
-    installPackage subversion && log "Installation of Subversion"
-    if [[ ! -d /root/scripts ]]; then
-        SFSVN="/root/scripts"
-        mkdir -p ${SFSVN} && svn checkout https://svn.code.sf.net/p/admin-scripts/code/trunk ${SFSVN}
+#recoverSF() {
+#    installPackage subversion && log "Installation of Subversion"
+#    if [[ ! -d /root/scripts ]]; then
+#        SFSVN="/root/scripts"
+#        mkdir -p ${SFSVN} && svn checkout https://svn.code.sf.net/p/admin-scripts/code/trunk ${SFSVN}
+#        chown -R root:root ${SFSVN} && chmod -R 700 ${SFSVN}
+#        log "SourceForge scripts in ${SFSVN}"
+#    elif [[ ! -d /root/scriptsSF ]]; then
+#        SFSVN="/root/scriptsSF"
+#        mkdir -p ${SFSVN} && svn checkout https://svn.code.sf.net/p/admin-scripts/code/trunk ${SFSVN}
+#        chown -R root:root ${SFSVN} && chmod -R 700 ${SFSVN}
+#        log "SourceForge scripts in ${SFSVN}"
+#    else
+#        echo "/root/scripts already exists !"
+#    fi
+#}
+
+recoverGIT() {
+	if [[ ! -d /root/scripts ]]; then
+		SFSVN="/root/scripts"
+		mkdir -p ${SFSVN} && git clone https://github.com/lazzio/admin.git ${SFSVN}
         chown -R root:root ${SFSVN} && chmod -R 700 ${SFSVN}
         log "SourceForge scripts in ${SFSVN}"
     elif [[ ! -d /root/scriptsSF ]]; then
         SFSVN="/root/scriptsSF"
-        mkdir -p ${SFSVN} && svn checkout https://svn.code.sf.net/p/admin-scripts/code/trunk ${SFSVN}
+        mkdir -p ${SFSVN} && git clone https://github.com/lazzio/admin.git ${SFSVN}
         chown -R root:root ${SFSVN} && chmod -R 700 ${SFSVN}
         log "SourceForge scripts in ${SFSVN}"
     else
-        echo "/root/scripts already exists !"
+       echo "/root/scripts already exists !"
     fi
 }
 
@@ -74,7 +90,7 @@ vimConfig() {
     installPackage vim && log "Installation of Vim"
     if [[ ! -f /etc/vim/vimrc.local ]]; then
         echo -e "syntax on \
-            \nset ai \
+            \n#set ai \
             \nset smarttab \
             \nset noet ci pi sts=0 sw=4 ts=4 \
             \nset cursorline \
@@ -122,8 +138,18 @@ installNTP() {
 #
 #################################
 
+# Install packages
+installPackage htop
+installPackage iotop
+installPackage iostat
+installPackage zip
+installPackage rsync
+installPackage git
+installPackage sysstat
+installPackage chkconfig
 
-recoverSF
+#recoverSF
+recoverGIT
 vimConfig
 #installFirewall
 installNTP
@@ -139,23 +165,12 @@ sed -i 's/^# alias l=/alias l=/g' /root/.bashrc
 echo "
 alias al=\"ls \$LS_OPTIONS -alh\"
 alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\"
-alias sfupdate=\"cd ${SFSVN} && svn update && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"" >> /root/.bashrc && . /root/.bashrc
+alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"" >> /root/.bashrc && . /root/.bashrc
 
 # Custom sources.list
 cp /etc/apt/sources.list /root/sources.list
 sed -i 's/^deb cdrom/#deb cdrom/g' /etc/apt/sources.list
 sed -i 's/^deb\(.*\)main$/deb\1main contrib non-free/g' /etc/apt/sources.list
-
-# Install packages
-installPackage htop
-installPackage iotop
-installPackage iostat
-installPackage zip
-installPackage rsync
-installPackage git
-installPackage sysstat
-installPackage chkconfig
-
 
 
 exit 0

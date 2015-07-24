@@ -279,7 +279,7 @@ blocked_ip() {
         if [[ -f ${TMP_IP_BAN} || -f ${TMP_IP_BAN2} ]]; then
                 rm ${TMP_IP_BAN} 2> /dev/null ; rm ${TMP_IP_BAN2} 2> /dev/null
         fi
-        wget -q --no-check-certificate https://svn.code.sf.net/p/admin-scripts/code/trunk/Banned/ip_to_ban.txt
+        wget -q --no-check-certificate https://raw.githubusercontent.com/lazzio/admin/master/Banned/ip_to_ban.txt
         #dos2unix ${TMP_IP_BAN}
         cat ${TMP_IP_BAN} | tr -d '\r' > ${TMP_IP_BAN2}
         iptables -N BANNED-IP
