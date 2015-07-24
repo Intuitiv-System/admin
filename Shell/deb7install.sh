@@ -101,11 +101,11 @@ cat >> /etc/apache2/sites-available/vhost.example << EOF
     #RewriteCond %{HTTPS} !on
     #RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
  
-    #RewriteCond %{HTTP_HOST} ^orvault.fr [OR]
-    #RewriteCond %{HTTP_HOST} ^(www\.)?orvault.org [OR]
-    #RewriteCond %{HTTP_HOST} ^(www\.)?ville-orvault.(fr|com|org|eu) [OR]
-    #RewriteCond %{HTTP_HOST} ^(www\.)?mairie-orvault.(com|org|fr)
-    #RewriteRule ^(.*)\$ http://www.orvault.fr\$1 [L,R=301]
+    #RewriteCond %{HTTP_HOST} ^oprod.fr [OR]
+    #RewriteCond %{HTTP_HOST} ^(www\.)?oprod.org [OR]
+    #RewriteCond %{HTTP_HOST} ^(www\.)?ville-oprod.(fr|com|org|eu) [OR]
+    #RewriteCond %{HTTP_HOST} ^(www\.)?mairie-oprod.(com|org|fr)
+    #RewriteRule ^(.*)\$ http://www.oprod.fr\$1 [L,R=301]
  
     DocumentRoot /home/oprod/www/
     <Directory /home/oprod/www/>
@@ -358,10 +358,12 @@ log "Install firewall : OK"
 
 
 ## Install Java
-cp /root/scripts/Applicatifs/Java/1.7/jdk-7u75-linux-x64.tar.gz /opt 
+cp /root/scripts/Applicatifs/Java/1.7/jdk-7u75-linux-x64.zip.* /opt 
 cd /opt 
+cat jdk-7u75-linux-x64.zip.00* > jdk-7u75-linux-x64.zip
+unzip jdk-7u75-linux-x64.zip
 tar xzf jdk-7u75-linux-x64.tar.gz
-rm /opt/jdk-7u75-linux-x64.tar.gz
+rm /opt/jdk-7u75-linux-x64.*
 echo "
 export PATH=\$PATH:/opt/jdk1.7.0_75/bin
 export JAVA_HOME=/opt/jdk1.7.0_75" >> /etc/profile && source /etc/profile
