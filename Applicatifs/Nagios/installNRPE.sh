@@ -78,7 +78,7 @@ fi
 CHECK_MEMORY="/usr/lib/nagios/plugins/check_memory"
 if [[ ! -f ${CHECK_MEMORY} ]]; then
 	cd /tmp
-	wget "https://svn.code.sf.net/p/admin-scripts/code/trunk/Applicatifs/Nagios/nagios_check/check_memory.txt"
+	wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_memory.txt"
 	mv /tmp/check_memory.txt ${CHECK_MEMORY}
 	perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_MEMORY}
 	chmod 755 ${CHECK_MEMORY}
@@ -89,7 +89,7 @@ fi
 CHECK_MAILQ="/usr/lib/nagios/plugins/check_postfix_queue"
 if [[ $(dpkg -l | grep "postfix " | awk '{print $1}') == "ii" ]]; then
 	cd /tmp
-	wget "https://svn.code.sf.net/p/admin-scripts/code/trunk/Applicatifs/Nagios/nagios_check/check_postfix_queue.txt"
+	wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_postfix_queue.txt"
 	mv /tmp/check_postfix_queue.txt ${CHECK_MAILQ}
 	perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_MAILQ}
 	chmod 755 ${CHECK_MAILQ}
@@ -100,7 +100,7 @@ fi
 CHECK_APACHE="/usr/lib/nagios/plugins/check_apache_connections"
 if [[ $(dpkg -l | grep "apache2 " | awk '{print $1}') == "ii" ]]; then
   cd /tmp
-  wget "https://svn.code.sf.net/p/admin-scripts/code/trunk/Applicatifs/Nagios/nagios_check/check_apache_connections.txt"
+  wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_apache_connections.txt"
   mv /tmp/check_apache_connections.txt ${CHECK_APACHE}
   perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_APACHE}
   chmod 755 ${CHECK_APACHE}
@@ -111,7 +111,7 @@ fi
 CHECK_JSTAT="/usr/lib/nagios/plugins/check_jstat"
 if [[ -n $(which java) ]]; then
   cd /tmp
-  wget "https://svn.code.sf.net/p/admin-scripts/code/trunk/Applicatifs/Nagios/nagios_check/check_jstat.txt"
+  wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_jstat.txt"
   mv /tmp/check_jstat.txt ${CHECK_JSTAT}
   perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_JSTAT}
   chmod 755 ${CHECK_JSTAT}
@@ -122,7 +122,7 @@ fi
 CHECK_MEMCACHED="/usr/lib/nagios/plugins/check_memcached_memory"
 if [[ -f "/etc/memcached.conf" ]]; then
   cd /tmp
-  wget "https://svn.code.sf.net/p/admin-scripts/code/trunk/Applicatifs/Nagios/nagios_check/check_memcached_memory"
+  wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_memcached_memory"
   mv /tmp/check_memcached_memory ${CHECK_MEMCACHED}
   perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_MEMCACHED}
   chmod 755 ${CHECK_MEMCACHED}
