@@ -90,7 +90,6 @@ vimConfig() {
     installPackage vim && log "Installation of Vim"
     if [[ ! -f /etc/vim/vimrc.local ]]; then
         echo -e "syntax on \
-            \n#set ai \
             \nset smarttab \
             \nset noet ci pi sts=0 sw=4 ts=4 \
             \nset cursorline \
