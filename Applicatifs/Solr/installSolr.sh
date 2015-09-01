@@ -2,10 +2,10 @@
 #
 # Filename : .sh
 # Version  : 1.0
-# Author   : 
+# Author   : mathieu androz
 # Contrib  : 
 # Description :
-#  . 
+#  . Install solr
 #  . 
 #
 
@@ -141,7 +141,26 @@ fi
 
 [[ ! -f $(ls /etc/rc3.d/ | grep "solr") ]] && update-rc.d solr defaults
 
-
+# Create logrotate
+if [[ ! -f /etc/logrotate.d/solr ]]; then
+cat >> /etc/logrotate.d/solr << --EOF
+/var/log/solr/*.log {
+        weekly
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        size 20M
+        notifempty
+        sharedscripts
+        postrotate
+                service solr restart > /dev/null
+        endscript
+}
+--EOF
+else
+    echo "Logrotate can't be configured at /etc/logrotate.d/solr. Investigate !"
+fi
 
 # Ok, c'est moche, mais ca permet de se retrouver plus facilement dans les logs...
 #log "------------------------------"
