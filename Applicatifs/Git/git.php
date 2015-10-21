@@ -28,7 +28,7 @@
 	elseif (isset($_GET['action']) && $_GET['action'] == 'status') {
 		$status = shell_exec("/usr/bin/git status 2>&1");
 
-		echo '<pre>Print Return of git status command :<br /><br />' $status '</pre>';
+		echo '<pre>Print Return of git status command :<br /><br />' . $status . '</pre>';
 	}
 	elseif (isset($_GET['action']) && $_GET['action'] == 'push' && isset($_POST['message'])) {
 		$result1 = trim(shell_exec('/usr/bin/git commit -a -m "' . str_replace('"', "'", $_POST['message']) . '" 2>&1'), " \t");
