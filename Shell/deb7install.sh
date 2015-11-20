@@ -472,14 +472,23 @@ ServerTokens Prod
 ServerSignature Off
 
 <DirectoryMatch \"/\\.svn\">
-       Deny from all
-       Satisfy all
+  Order allow,deny
+  Deny from all
+  Satisfy all
 </DirectoryMatch>
 
 <DirectoryMatch \"/\\.git\">
-       Deny from all
-       Satisfy all
+  Order allow,deny
+  Deny from all
+  Satisfy all
 </DirectoryMatch>
+
+<Files ~ \"^\\.git\">
+  Order allow,deny
+  Deny from all
+  Satisfy all
+</Files>
+
 " >> ${APACHE_SECURITY}
 log "Secure Apache2 : OK"
 

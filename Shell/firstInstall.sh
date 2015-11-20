@@ -164,7 +164,8 @@ sed -i 's/^# alias l=/alias l=/g' /root/.bashrc
 echo "
 alias al=\"ls \$LS_OPTIONS -alh\"
 alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\"
-alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"" >> /root/.bashrc && . /root/.bashrc
+alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"
+alias createftp=\"/root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh\"" >> /root/.bashrc && source /root/.bashrc
 
 # Custom sources.list
 cp /etc/apt/sources.list /root/sources.list
