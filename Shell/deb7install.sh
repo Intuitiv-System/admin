@@ -74,7 +74,7 @@ fi
 apt-get update && apt-get upgrade
 
 # Install Apache
-apt-get install apache2 php5 php5-gd php5-intl php5-xsl php5-mcrypt php5-memcached php-apc php5-fpm
+apt-get install apache2 php5 php5-gd php5-intl php5-xsl php5-mcrypt php5-memcached php-apc php5-fpm php5-curl curl imagemagick php5-imagick
 a2enmod actions headers expires rewrite
 
 # Custom PHP
