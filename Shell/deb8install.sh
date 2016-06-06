@@ -291,15 +291,40 @@ apt-get install -y mysql-server
 service mysql stop
 echo "[mysqld]
 character-set-server = utf8
- 
+
 innodb_buffer_pool_size = 128M
 max_allowed_packet = 32M
- 
+
 #query_cache_size = 32M
 #tmp_table_size = 32M
 #max_heap_table_size = 32M
-#table_cache = 128" > /etc/mysql/conf.d/custom.cnf
-service mysql start
+#table_cache = 128
+open_files_limit = 102400
+
+[mysqld_safe]
+open_files_limit = 102400" > /etc/mysql/conf.d/custom.cnf
+
+cat >>/etc/security/limits.conf<<_EOF_
+* soft nofile 102400
+* hard nofile 102400
+* soft nproc 10240
+* hard nproc 10240
+mysql hard nofile 102400
+mysql soft nofile 102400
+_EOF_
+
+if [ ! -f /etc/security/limits.d/90-nproc.conf ]
+then
+  cat >> /etc/security/limits.d/90-nproc.conf<<_EOF_
+* soft nofile 102400
+* hard nofile 102400
+* soft nproc 10240
+* hard nproc 10240
+root soft nproc unlimited
+_EOF_
+fi
+
+systemctl start mysql.service
 mysql_secure_installation
 ## Install Pureftpd
 /root/scripts/Shell/web/ftp/installPureFTPD.sh
