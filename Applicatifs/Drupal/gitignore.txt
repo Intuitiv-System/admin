@@ -17,4 +17,4 @@ UPGRADE.txt
 README.txt
 
 # Custom file
-gitpull.php
+git.php

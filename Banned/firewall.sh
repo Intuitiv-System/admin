@@ -269,6 +269,17 @@ phpmyadmin_connexion() {
         echo "Autorisation des connexions Phpmyadmin : [OK]"
 }
 
+solr_connexion() {
+        #---------------------------------------------------------------------
+        # SOLR
+        #---------------------------------------------------------------------
+        iptables -t filter -A INPUT -p tcp --dport 8983 -j ACCEPT
+        iptables -t filter -A OUTPUT -p tcp --dport 8983 -j ACCEPT
+
+        echo "Autorisation des connexions Solr : [OK]"
+}
+
+
 blocked_ip() {
         #----------------------------------------------------------------------
         # List of Banned IP providing from Hackers
@@ -359,6 +370,7 @@ iptables_start() {
         phpmyadmin_connexion
         blocked_ip
         block_port_scan
+	solr_connexion
         #block_https_for "toto.com" "titi.com" "blop.com"
         return 0
 }
