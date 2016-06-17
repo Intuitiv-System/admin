@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Filename : deb8install.sh
-# Version  : 1.0
+# Version  : 1.1
 # Author   : Mathieu ANDROZ
 # Contrib  : Aurélien DUBUS
 # Description :
@@ -83,7 +83,7 @@ echo ";
 ;
 expose_php = Off
 date.timezone = \"Europe/Paris\"
-max_input_vars = 3000
+max_input_vars = 6000
 short_open_tag = Off
 " > /etc/php5/fpm/conf.d/custom.ini
 
@@ -112,7 +112,7 @@ cat >> /etc/apache2/sites-available/vhost.example << EOF
       #<IfModule security2_module>
       #   SecRuleEngine Off
       #</IfModule>
-        Options -Indexes FollowSymLinks MultiViews
+        Options -Indexes +FollowSymLinks +MultiViews
         Require all granted
         #AuthType Basic
         #AuthName "Restricted Area oprod : please login"
@@ -284,24 +284,28 @@ php_admin_value[safe_mode]=0
 ; Liste of authorized extensions with php-fpm
 security.limit_extensions = .php .php5 .php3 .php4 .html .htm
 _EOF_
-## Install memcached 
+
+#### Install memcached ####
 installPackage memcached
-## Install MySQL
+
+#### Install MySQL ####
 apt-get install -y mysql-server
 service mysql stop
 echo "[mysqld]
 character-set-server = utf8
- 
-innodb_buffer_pool_size = 128M
+
+innodb_file_per_table = 1
+innodb_buffer_pool_size = 256M
 max_allowed_packet = 32M
- 
-#query_cache_size = 32M
-#tmp_table_size = 32M
-#max_heap_table_size = 32M
-#table_cache = 128" > /etc/mysql/conf.d/custom.cnf
+
+query_cache_size = 32M
+tmp_table_size = 32M
+max_heap_table_size = 32M
+table_cache = 8000" > /etc/mysql/conf.d/custom.cnf
 service mysql start
 mysql_secure_installation
-## Install Pureftpd
+
+#### Install Pureftpd ####
 /root/scripts/Shell/web/ftp/installPureFTPD.sh
 ## Install Postfix
 apt-get install -y postfix
@@ -309,13 +313,14 @@ cp /etc/postfix/main.cf /etc/postfix/main.cf.orig
 sed -i -e 's/^relayhost/#relayhost/g' /etc/postfix/main.cf 
 echo "
 ##########
-# Mandrill config
+# Sparkpost config
 ##########
-relayhost = [smtp.mandrillapp.com]:587
-smtp_sasl_auth_enable = yes
-smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
-smtp_sasl_security_options = noanonymous
-smtp_use_tls = yes
+smtp_sasl_auth_enable = yes 
+smtp_sasl_password_maps = static:SMTP_Injection:<your API key>
+relayhost = [smtp.sparkpostmail.com]:587
+smtp_sasl_security_options = noanonymous 
+smtp_tls_security_level = encrypt
+header_size_limit = 4096000
 # Make sure Postfix listens to localhost only
 inet_interfaces = 127.0.0.1" >> /etc/postfix/main.cf 
 log "Install Pureftpd : OK"
@@ -328,24 +333,28 @@ chmod 755 drush drush.php
 ln -s /opt/drush-6.5.0/drush /usr/local/bin/drush
 rm /opt/drush-6.5.0.zip
 log "Install drush : OK"
+
 ## Install Firewall
 cp /root/scripts/Banned/firewall.sh /etc/init.d/firewall 
 chmod 755 /etc/init.d/firewall
 sed -i 's/MONITORING_IP_LIST=("192.168.1.5")/MONITORING_IP_LIST=("80.12.83.108" "37.59.3.119")/g' /etc/init.d/firewall
 update-rc.d firewall defaults
 log "Install firewall : OK"
+
 ## Install Java
-cp /root/scripts/Applicatifs/Java/1.7/jdk-7u75-linux-x64.zip.* /opt 
-cd /opt 
-cat jdk-7u75-linux-x64.zip.00* > jdk-7u75-linux-x64.zip
-unzip jdk-7u75-linux-x64.zip
-tar xzf jdk-7u75-linux-x64.tar.gz
-rm /opt/jdk-7u75-linux-x64.*
-echo "
-export PATH=\$PATH:/opt/jdk1.7.0_75/bin
-export JAVA_HOME=/opt/jdk1.7.0_75" >> /etc/profile && source /etc/profile
-ln -s /opt/jdk1.7.0_75/bin/java /usr/local/bin/java
+##cp /root/scripts/Applicatifs/Java/1.7/jdk-7u75-linux-x64.zip.* /opt
+##cd /opt 
+##cat jdk-7u75-linux-x64.zip.00* > jdk-7u75-linux-x64.zip
+##unzip jdk-7u75-linux-x64.zip
+##tar xzf jdk-7u75-linux-x64.tar.gz
+##rm /opt/jdk-7u75-linux-x64.*
+##echo "
+##export PATH=\$PATH:/opt/jdk1.7.0_75/bin
+##export JAVA_HOME=/opt/jdk1.7.0_75" >> /etc/profile && source /etc/profile
+##ln -s /opt/jdk1.7.0_75/bin/java /usr/local/bin/java
+apt-get install openjdk-7-jdk -y
 log "Install Java : OK"
+
 ## Install NRPE
 /root/scripts/Applicatifs/Nagios/installNRPE.sh
 log "Install monitoring NPRE : OK"
@@ -365,23 +374,20 @@ cat >> /etc/apache2/sites-available/0-maintenance << _EOF
   DocumentRoot /var/www/html/www/
  
   <Directory /var/www/html/www/>
-    Options -Indexes FollowSymLinks MultiViews
+    Options -Indexes +FollowSymLinks +MultiViews
     AllowOverride None
   </Directory>
  
   <Directory /var/www/html/www/tools/>
-    Options -Indexes FollowSymLinks MultiViews
+    Options -Indexes +FollowSymLinks +MultiViews
     AllowOverride All
-    Order deny,allow
-    Deny from all
-    Allow from 80.12.83.108
+    Require ip 80.12.83.108
     #AuthType Basic
     #AuthName "Restricted Area : please login"
     #AuthUserFile /var/www/.htpasswd
     #Require valid-user
   </Directory>
- 
-  
+
   # Clear PHP settings of this website
   <FilesMatch ".+\.ph(p[345]?|t|tml)\$">
     SetHandler None
@@ -405,7 +411,8 @@ a2ensite 0-maintenance
 a2dissite 000-default
 service apache2 reload
 log "Install maintenance mode + tools : OK"
-## install backupit
+
+#### install backupit ####
 adduser backupit
 cp /root/scripts/Shell/backup/dumpalldb /home/backupit/
 chown backupit:backupit /home/backupit/dumpalldb
@@ -415,10 +422,13 @@ installPackage sudo
 echo "backupit ALL=NOPASSWD: /usr/bin/rsync" >> /etc/sudoers
 mkdir /home/backupit/.ssh && chown backupit:backupit /home/backupit/.ssh && chmod 700 /home/backupit/.ssh
 log "Install backupit : OK"
+
+#### edit crontab ####
 echo "
 # example purge session files
 #00 12 * * * root  find /home/plip/sessions/* -type f -mtime +15 -exec rm {} \;" >> /etc/crontab
-## Secure Apache
+
+#### Secure Apache ####
 APACHE_SECURITY="/etc/apache2/conf.d/security"
 sed -i 's/^ServerTokens/#ServerTokens/g' ${APACHE_SECURITY}
 sed -i 's/^ServerSignature/#ServerSignature/g' ${APACHE_SECURITY}
@@ -426,40 +436,40 @@ echo "
 ServerTokens Prod
 ServerSignature Off
 <DirectoryMatch \"/\\.svn\">
-  #Order allow,deny
-  #Deny from all
-  Require all granted
-  #Satisfy all
+  Require all denied
 </DirectoryMatch>
 <DirectoryMatch \"/\\.git\">
-  #Order allow,deny
-  #Deny from all
-  #Satisfy all
-  Require all granted
+  Require all denied
   </DirectoryMatch>
 <Files ~ \"^\\.git\">
-  #Order allow,deny
-  #Deny from all
-  #Satisfy all
-  Require all granted
+  Require all denied
   </Files>
 " >> ${APACHE_SECURITY}
 log "Secure Apache2 : OK"
-##Configure OpCache
+
+#### Configure OpCache ####
 if [ -f /etc/php5/fpm/conf.d/05-opcache.ini ]
 then
       cat >> /etc/php5/fpm/conf.d/05-opcache.ini << _EOF_
-      opcache.enable=1
-      opcache.memory_consumption=128
-      opcache.max_file_size=2M
+opcache.fast_shutdown=1
+opcache.enable_cli=1
+opcache.enable=1
+opcache.max_accelerated_files = 5000
+opcache.memory_consumption = 128
+opcache.interned_strings_buffer = 16
+opcache.max_file_size = 2M
+;opcache.revalidate_freq = 10
 _EOF_
 
     else
         echo "php5-fpm seems to be not installed "
 fi
 
-## install phpmyadmin
-apt-get install phpmyadmin
+#### install phpmyadmin ####
+apt-get install phpmyadmin > /dev/null
+if [[ $(awk -F":" '{print $3}' /etc/group | grep -E '^990$') != "" ]]; then
+  log "Install phpmyadmin stopped because a group with GID 990 alreday exists."
+else
 addgroup --system --gid 990 phpmyadmin
 adduser --system --home /opt/phpmyadmin --uid 990 --gid 990 --shell /bin/sh phpmyadmin
 mkdir -p /opt/phpmyadmin/{tmp,cgi-bin,.socks,sessions,logs}
@@ -503,7 +513,7 @@ cat >> /etc/apache2/sites-available/phpmyadmin.conf << _EOF_
   DocumentRoot /opt/phpmyadmin/www/
  
   <Directory /opt/phpmyadmin/www/>
-          Options FollowSymLinks
+          Options +FollowSymLinks
           DirectoryIndex index.php
           Require all granted
  
@@ -537,10 +547,10 @@ cat >> /etc/apache2/sites-available/phpmyadmin.conf << _EOF_
  
   # Disallow web access to directories that don't need it
   <Directory /opt/phpmyadmin/www/libraries>
-    Require all granted
+    Require all denied
   </Directory>
   <Directory /opt/phpmyadmin/phpmyadmin/www/setup/lib>
-    Require all granted
+    Require all denied
   </Directory>
  
   # Clear PHP settings of this website
@@ -681,18 +691,48 @@ cat >> /etc/logrotate.d/phpmyadmin << __EOF
 __EOF
 fi
 log "Install of phpmyadmin : OK"
+fi
 
-## Install mod_security
+#### Install mod_security ####
 /root/scripts/Shell/web/Security/installModSecurityDeb8.sh
 service apache2 restart
 log "Install of mod_security : OK"
+
+#### Install fail2ban ####
+apt-get install -y fail2ban
+log "Install of fail2ban : OK"
+
+#### Install Solr ####
+echo ""
+clear
+echo -e "Do you want to install the custom package of Solr 4.10 ?"
+select choix in "oui" "non"
+do
+  case ${choix} in
+    yes)
+      wget http://deb.shareyourscript.me/sys.gpg.key | apt-key add -
+      # Solr
+      echo "deb http://deb.shareyourscript.me/ jessie main" >> /etc/apt/sources.list
+      gpg --keyserver pgpkeys.mit.edu --recv-key 544C72F3DA0F6FCC 
+      gpg -a --export 544C72F3DA0F6FCC | apt-key add -
+      apt-get update
+      apt-get install -y solr-sys > /dev/null
+      log "Install of Solr : OK"
+    ;;
+    no)
+      log "Solr will not be installed."
+      continue
+    ;;
+  esac
+done
 
 
 ### end 
 echo "
 ##############################################
 Think to :
-  - Configure postfix with sasl_passwd file for Mandrill
-  - Create Solr service + home
-  - install fail2ban
+  - Configure postfix and Sparkpost
+  - Configure fail2ban
 "
+
+exit 0
