@@ -1,0 +1,63 @@
+#!/bin/bash
+
+STATE_OK=0
+STATE_WARNING=1
+STATE_CRITICAL=2
+STATE_UNKNOWN=3
+
+PROGNAME=$(basename $0)
+VERSION="Version 1.0,"
+AUTHOR="2016, Mathieu ANDROZ <mandroz@intuitiv.fr>"
+
+print_version() {
+    echo "$VERSION $AUTHOR"
+}
+
+print_help() {
+    echo ""
+    echo "$PROGNAME - Simply check if Apache is alive"
+    echo ""
+    echo "Usage $PROGNAME"
+    echo "Options:"
+    echo "  -v/--version"
+    echo "     Print script version"
+    echo "  -h/--help"
+    echo "     Display this help"
+    exit $STATE_UNKNOWN
+}
+
+while test -n "$1"; do
+    case "$1" in
+        --help|-h)
+            print_help
+            exit 0
+            ;;
+        --version|-v)
+            print_version $PROGNAME $VERSION
+            exit 0
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            print_help
+            exit 0
+            ;;
+    esac
+    shift
+done
+
+#Check
+APACHE_INSTALLED=$(dpkg --list | grep -E "^ii  apache2 ")
+CHECK_APACHE=$(ps aux | grep apache2 | grep -v grep | wc -l)
+
+#Return
+# If apache2 is installed
+if [[ -n "${APACHE_INSTALLED}" ]]; then
+  # Check apache is alive
+  if [[ "${CHECK_APACHE}" = 0 ]]; then
+    echo "Apache is down !"
+    exit ${STATE_CRITICAL}
+  else
+    echo "Apache is up and running"
+    exit ${STATE_OK}
+  fi
+fi
