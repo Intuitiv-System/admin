@@ -356,7 +356,7 @@ apt-get install openjdk-7-jdk -y
 log "Install Java : OK"
 
 ## Install NRPE
-/root/scripts/Applicatifs/Nagios/installNRPE.sh
+/root/scripts/Applicatifs/Nagios/installNRPEDeb8.sh
 log "Install monitoring NPRE : OK"
 ## Install maintenance
 rm /var/www/html/index.html
