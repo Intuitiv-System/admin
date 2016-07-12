@@ -71,6 +71,7 @@ command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 150 -c 200
 command[check_all_disks]=/usr/lib/nagios/plugins/check_disk -w 20% -c 10%
 command[check_procs]=/usr/lib/nagios/plugins/check_procs -w 250 -c 400
 command[check_swap]=/usr/lib/nagios/plugins/check_swap -w 20% -c 10%
+command[check_apache_alive]=/usr/lib/nagios/plugins/check_apache_alive
 " > ${NRPECUSTOMCONF}
 fi
 
@@ -130,6 +131,17 @@ if [[ -f "/etc/memcached.conf" ]]; then
 fi
 
 echo "#command[check_tcp_solr]=/usr/lib/nagios/plugins/check_tcp -H localhost -4 --port 8983" >> ${NRPECUSTOMCONF}
+
+# Creation of check_apache_alive check script
+CHECK_APACHE_ALIVE="/usr/lib/nagios/plugins/check_apache_alive"
+if [[ -d "/etc/apache2" ]]; then
+  cd /tmp
+  wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_apache_alive.txt"
+  mv /tmp/check_apache_alive.txt ${CHECK_APACHE_ALIVE}
+  perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_APACHE_ALIVE}
+  chmod 755 ${CHECK_APACHE_ALIVE}
+fi
+
 
 service nagios-nrpe-server restart
 
