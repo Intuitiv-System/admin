@@ -718,7 +718,7 @@ log "Install of fail2ban : OK"
 echo ""
 clear
 echo -e "Do you want to install the custom package of Solr 4.10 ?"
-select choix in "oui" "non"
+select choix in "yes" "no"
 do
   case ${choix} in
     yes)
