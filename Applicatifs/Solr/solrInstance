@@ -1,0 +1,138 @@
+#!/bin/bash
+#
+# Filename : solrInstance
+# Version  : 1.1
+# Author   : Mathieu Androz
+# Contrib  :
+# Description :
+#  . Create a new instance/core in Solr
+#  . Configure the new core
+#  . Configure solr.xml to access to the new core
+#  . Display information about new core
+#  . Standalone version, not packaged
+
+#set -x
+
+# Test OS
+if [[ -f "/etc/issue" ]]; then
+        if [[ $(awk '{print $1}' /etc/issue) =~ Debian|Ubuntu ]]; then
+                # Debin or Ubuntu
+                OS="Debian-like"
+                [[ -f "/lib/lsb/init-functions" ]] && . /lib/lsb/init-functions
+        fi
+elif [[ -f "/etc/redhat-release" ]]; then
+        if [[ $(awk '{print $1}' /etc/redhat-release) -eq "CentOS" ]]; then
+                OS="CentOS"
+        fi
+else
+        OS="nope"
+fi
+
+echo $OS
+
+usage() {
+        if [[ "${OS}" == "Debian-like" ]]; then
+                log_action_msg "Usage: ${0} {create|start|stop|list|help}" || true
+        else
+                echo "Usage: ${0} {create|start|stop|list|help}"
+        fi
+}
+
+
+NAME=solr-sys
+SOLR_DIR="$(pwd)"
+
+# Read configuration variable file if it is present
+[[ -r "${SOLR_DIR}"/solr.default ]] && . "${SOLR_DIR}"/solr.default
+
+# Check if launch as right Unix user
+if [[ "${OS}" == "Debian-like" ]]; then
+        [[ $(whoami) != "${SOLR_USER}" ]] && ( log_failure_msg "Please launch this script as ${SOLR_USER}" || true ) && exit 5
+else
+        [[ $(whoami) != "${SOLR_USER}" ]] && ( echo "Please launch this script as ${SOLR_USER}" ) && exit 5
+fi
+
+
+
+[[ ! -d ${SOLR_DIR} ]] && echo -e "\n${SOLR_DIR} doesn't exist\n" && exit 1
+
+# Check Solr is up
+[[ ! $(ps aux | grep java | grep solr | awk '{print $1}') ]] && echo -e "\nSolr is not running. Check it and try again.\n" && exit 2
+
+
+case ${1} in
+        create|--create)
+                # Ask name of the new core to create
+                CORE=${2}
+                while [[ ${CORE} = "" ]]
+                do
+                        read -p "Enter the name of the new core to create : " CORE
+                done
+
+                echo -e "\nStarting generation of the new core ${CORE}\n"
+
+                if [[ -d ${SOLR_DIR}/drupal/multicore/original ]]; then
+                        cp -R ${SOLR_DIR}/drupal/multicore/original ${SOLR_DIR}/drupal/multicore/${CORE}
+                        [[ -d ${SOLR_DIR}/drupal/multicore/${CORE}/data ]] && rm -rf ${SOLR_DIR}/drupal/multicore/${CORE}/data
+                        [[ -f ${SOLR_DIR}/drupal/multicore/solr.xml ]] && cp ${SOLR_DIR}/drupal/multicore/solr.xml ${SOLR_DIR}/drupal/multicore/solr.xml.orig
+                        sed -i '/<!-- liste cores -->/a <core name="'${CORE}'" instanceDir="'${CORE}'" \/>' ${SOLR_DIR}/drupal/multicore/solr.xml
+                        sed -i 's/original/'${CORE}'/g' ${SOLR_DIR}/drupal/multicore/${CORE}/conf/solrconfig.xml
+
+                        if [[ "${OS}" == "Debian-like" ]]; then
+                                log_success_msg "Collection called ${CORE} generated successfully." || true
+                        else
+                                echo -e "\nOK : Collection called ${CORE} generated successfully.\n"
+                        fi
+                else
+                        if [[ "${OS}" == "Debian-like" ]]; then
+                                log_failure_msg "Original core can't be duplicated. Aborted..." || true
+                        else
+                                echo -e "\nFAIL : Original core can't be duplicated. Aborted...\n" && exit 3
+                        fi
+                fi
+
+                echo -e "\nRestart of ${NAME} service\n"
+                if [[ $(whoami) != "root" ]]; then
+                        echo "
+You have to restart Solr to apply changes.
+If Solr was started as a service, login as root and restart service.
+Else, execute the folling command line :
+
+        ${SOLR_DIR}/bin/solr -p ${SOLR_PORT} -e multicore -m ${SOLR_JAVA_MEM}
+
+"
+                else
+                        service ${NAME} restart
+                fi
+
+                echo "
+-----------------------------------------------------------------------
+New connection is available at : http://intuitiv:technology@localhost:${SOLR_PORT}/solr/${CORE}
+-----------------------------------------------------------------------
+"
+        ;;
+        list|--list)
+                LIST=$(find ${SOLR_DIR}/drupal/multicore/* -maxdepth 0 -type d -not \( -name original -prune \))
+                echo ${LIST}
+        ;;
+        start)
+                if [[ -O "${SOLR_DIR}"/bin/solr ]] && [[ ! -x "${SOLR_DIR}"/bin/solr ]]; then
+                        chmod 755 "${SOLR_DIR}"/bin/solr
+                fi
+                if [[ ! -x "${SOLR_DIR}"/bin/solr ]]; then
+                        echo "${SOLR_DIR}/bin/solr is not executable. Please chmod 755 ${SOLR_DIR}/bin/solr and try again" && exit 2
+                fi
+                ${SOLR_DIR}/bin/solr -p ${SOLR_PORT} -e multicore -m ${SOLR_JAVA_MEM}
+        ;;
+        stop)
+                ${SOLR_DIR}/bin/solr stop -all
+        ;;
+        help|--help)
+                usage && exit 1
+        ;;
+        *)
+                usage && exit 1
+        ;;
+esac
+
+exit 0

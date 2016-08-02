@@ -78,7 +78,7 @@ apt-get install apache2 php5 php5-gd php5-intl php5-xsl php5-mcrypt php5-memcach
 a2enmod actions headers expires rewrite
 
 ##Faire en sorte que le logrotate d'apache soit le dernier a être exécuté
-if [[ -f /etc/logrotate.d/apache2]]
+if [[ -f /etc/logrotate.d/apache2 ]]
 then
 mv /etc/logrotate.d/apache2 /etc/logrotate.d/z_apache2
 fi
