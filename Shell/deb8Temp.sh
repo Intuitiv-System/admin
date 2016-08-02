@@ -733,7 +733,7 @@ do
     ;;
     no)
       log "Solr will not be installed."
-      continue
+      #continue
     ;;
   esac
 done
