@@ -85,6 +85,7 @@ expose_php = Off
 date.timezone = \"Europe/Paris\"
 max_input_vars = 6000
 short_open_tag = Off
+error_reporting = E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED
 " > /etc/php5/fpm/conf.d/custom.ini
 
 # Install FPM
@@ -324,15 +325,20 @@ header_size_limit = 4096000
 # Make sure Postfix listens to localhost only
 inet_interfaces = 127.0.0.1" >> /etc/postfix/main.cf 
 log "Install Pureftpd : OK"
+
 ## Install drush
-cp /root/scripts/Applicatifs//Drupal/drush-6.5.0.zip /opt 
-cd /opt 
-unzip drush-6.5.0.zip
-cd drush-6.5.0
-chmod 755 drush drush.php
-ln -s /opt/drush-6.5.0/drush /usr/local/bin/drush
-rm /opt/drush-6.5.0.zip
-log "Install drush : OK"
+cd  /root
+installPackage curl
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/local/bin/composer
+git clone https://github.com/drush-ops/drush.git /usr/local/src/drush
+cd /usr/local/src/drush
+git checkout 7.3.0
+git checkout -b 7.3.0
+ln -s /usr/local/src/drush/drush /usr/local/bin/drush
+composer install
+drush --version
+log "Install drush version 7.3.0: OK"
 
 ## Install Firewall
 cp /root/scripts/Banned/firewall.sh /etc/init.d/firewall 
@@ -352,7 +358,7 @@ log "Install firewall : OK"
 ##export PATH=\$PATH:/opt/jdk1.7.0_75/bin
 ##export JAVA_HOME=/opt/jdk1.7.0_75" >> /etc/profile && source /etc/profile
 ##ln -s /opt/jdk1.7.0_75/bin/java /usr/local/bin/java
-apt-get install openjdk-7-jdk -y
+installPackage openjdk-7-jdk
 log "Install Java : OK"
 
 ## Install NRPE
@@ -367,7 +373,7 @@ cd /var/www/html/www/
 #unzip maintenance_apc_memcached.zip
 #rm maintenance_apc_memcached.zip
 chown -R www-data:www-data /var/www/html/www/
-cat >> /etc/apache2/sites-available/0-maintenance << _EOF
+cat >> /etc/apache2/sites-available/0-maintenance.conf << _EOF
 <VirtualHost *:80>
   ServerAdmin webmaster@intuitiv.fr
  
@@ -429,7 +435,7 @@ echo "
 #00 12 * * * root  find /home/plip/sessions/* -type f -mtime +15 -exec rm {} \;" >> /etc/crontab
 
 #### Secure Apache ####
-APACHE_SECURITY="/etc/apache2/conf.d/security"
+APACHE_SECURITY="/etc/apache2/conf-available/security.conf"
 sed -i 's/^ServerTokens/#ServerTokens/g' ${APACHE_SECURITY}
 sed -i 's/^ServerSignature/#ServerSignature/g' ${APACHE_SECURITY}
 echo "
@@ -466,7 +472,7 @@ _EOF_
 fi
 
 #### install phpmyadmin ####
-apt-get install phpmyadmin > /dev/null
+apt-get install phpmyadmin
 if [[ $(awk -F":" '{print $3}' /etc/group | grep -E '^990$') != "" ]]; then
   log "Install phpmyadmin stopped because a group with GID 990 alreday exists."
 else
@@ -500,7 +506,7 @@ echo "
 " >> /opt/phpmyadmin/www/config.inc.php
 chown -R phpmyadmin:phpmyadmin /opt/phpmyadmin/
 #Deplacement du fichier de config phpmaydmin d'apache
-mv /etc/apache2/conf.d/phpmyadmin.conf /root/phpmyadmin.conf
+a2disconf phpmyadmin
 #On dit a Apache d'ecouter aussi le port 8888 en plus du 80 et 443
 PORTS="/etc/apache2/ports.conf"
 LIGNE=$(awk '$0 == "Listen 80" {print NR}' ${PORTS})
