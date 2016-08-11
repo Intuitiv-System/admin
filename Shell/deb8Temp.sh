@@ -390,7 +390,7 @@ cat >> /etc/apache2/sites-available/0-maintenance.conf << _EOF
     AllowOverride None
   </Directory>
  
-  <Directory /var/www/html/www/tools/>
+  <Directory /var/www/html/tools/>
     Options -Indexes +FollowSymLinks +MultiViews
     AllowOverride All
     Require ip 80.12.83.108 37.59.3.119
