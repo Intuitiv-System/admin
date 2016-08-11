@@ -86,7 +86,7 @@ if [[ ! -f ${CHECK_MEMORY} ]]; then
 fi
 
 ##Creation of check_opcache script
-CHECK_OPCACHE="/var/www/html/tools/"
+CHECK_OPCACHE="/var/www/html/www/tools/"
 if [[ ! -d ${CHECK_OPCACHE} ]]
 then
   mkdir -p ${CHECK_OPCACHE}
