@@ -393,7 +393,7 @@ cat >> /etc/apache2/sites-available/0-maintenance.conf << _EOF
   <Directory /var/www/html/www/tools/>
     Options -Indexes +FollowSymLinks +MultiViews
     AllowOverride All
-    Require ip 80.12.83.108
+    Require ip 80.12.83.108 37.59.3.119
     #AuthType Basic
     #AuthName "Restricted Area : please login"
     #AuthUserFile /var/www/.htpasswd
