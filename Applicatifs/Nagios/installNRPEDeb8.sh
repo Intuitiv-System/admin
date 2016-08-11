@@ -86,10 +86,11 @@ if [[ ! -f ${CHECK_MEMORY} ]]; then
 fi
 
 ##Creation of check_opcache script
-CHECK_OPCACHE="/var/www/html/tools/"
+CHECK_OPCACHE="/var/www/html/www/tools/"
 if [[ ! -d ${CHECK_OPCACHE} ]]
 then
   mkdir -p ${CHECK_OPCACHE}
+  chown -R www-data:www-data ${CHECK_OPCACHE}
 fi
   cd /tmp
   wget "https://github.com/lazzio/admin/blob/master/Applicatifs/Nagios/nagios_check/check_opcache.php"
