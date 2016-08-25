@@ -463,6 +463,7 @@ log "Secure Apache2 : OK"
 if [ -f /etc/php5/fpm/conf.d/05-opcache.ini ]
 then
       cat >> /etc/php5/fpm/conf.d/05-opcache.ini << _EOF_
+zend_extension=opcache.so
 opcache.fast_shutdown=1
 opcache.enable_cli=1
 opcache.enable=1
