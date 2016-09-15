@@ -1,11 +1,11 @@
 #!/bin/bash
 
 ## Création BDD et USER
-echo -e "Enter un nom d'utilisateur SQL\n"
+echo -e "Enter un nom d'utilisateur SQL"
 read username
-echo -e "Choisir le format de DB\n"
-echo "1). utf8"
-echo "2). utf8mb4"
+echo -e "Choisir le format de DB"
+echo "1) utf8"
+echo "2) utf8mb4"
 
 read choice
 
