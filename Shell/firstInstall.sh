@@ -166,6 +166,7 @@ alias al=\"ls \$LS_OPTIONS -alh\"
 alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\"
 alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"
 alias createftp=\"/root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh\"
+alias newDB=\"/root/scripts/Shell/mysql/newDB.sh"
 
 function n2ensite {
   NGINXDIR=\"/etc/nginx/\"
