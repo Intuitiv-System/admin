@@ -1,15 +1,23 @@
 #!/bin/bash
 
 ## Création BDD et USER
-echo -e "Enter un nom d'utilisateur SQL"
+
+S1='utf8'
+S2='utf8mb4'
+
+if [ -z "$1" ]
+then
+  echo -e "Usage:
+  ./newDB.sh utf8
+  or
+  ./newDB.sh utf8mb4"
+exit 1
+fi
+
+echo -e "Enter un nom d'utilisateur SQL\n"
 read username
-echo -e "Choisir le format de DB"
-echo "1) utf8"
-echo "2) utf8mb4"
 
-read choice
-
-if [ $choice -eq 1 ]
+if [ "$1" = "$S1" ]
 then
   echo "Password for SQL user: ${username}"
   read -s password
@@ -30,7 +38,7 @@ then
      SQL="${Q1}${Q2}${Q3}${Q4}"
 
      mysql -u root -p -e "${SQL}"
-elif [ $choice -eq 2 ]
+elif [ "$1" = "$S2" ]
 then
    echo "Password for SQL user: ${username}"
    read -s password
@@ -52,9 +60,6 @@ then
 
   mysql -u root -p -e "${SQL}"
 
-else
-  echo "Choisir une bonne valeur"
-  exit 1
 fi
 
 exit 0
