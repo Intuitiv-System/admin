@@ -170,7 +170,7 @@ alias newDB=\"/root/scripts/Shell/mysql/newDB.sh"
 
 function n2ensite {
   NGINXDIR=\"/etc/nginx/\"
-  [[ \${1} = \"\" ]] && echo \"You don't have specified a virtualhost\" && return 1
+  [[ \${1} = \"\" ]] && echo \"You don\'t have specified a virtualhost\" && return 1
   cd \${NGINXDIR}/sites-enabled/
   ln -s \${NGINXDIR}/sites-available/\"\${1}\" \"\${1}\"
   echo \"Virtualhost \${1} enabled.\"
@@ -179,7 +179,7 @@ function n2ensite {
 
 function n2dissite {
   NGINXDIR=\"/etc/nginx/\"
-  [[ \${1} = \"\" ]] && echo \"You don't have specified a virtualhost\" && return 1
+  [[ \${1} = \"\" ]] && echo \"You don\'t have specified a virtualhost\" && return 1
   rm \${NGINXDIR}/sites-enabled/\"\${1}\"
   echo \"Virtualhost \${1} disabled.\"
   echo \"Reload Nginx to apply changes : service nginx reload\"
