@@ -171,7 +171,7 @@ fi
 
   2*)
     echo -e "Création du Vhost pour Nginx\n"
-if [ -f /etc/nginx/sites-available/${url} ]
+if [ ! -f /etc/nginx/sites-available/${url} ]
 then
   cat >> /etc/nginx/sites-available/${url} << _END3_
     server {
