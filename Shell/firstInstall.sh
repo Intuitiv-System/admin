@@ -153,20 +153,21 @@ vimConfig
 #installFirewall
 installNTP
 
+
 # Custom bashrc
 cp /root/.bashrc /root/.bashrc.orig
 sed -i 's/^# export LS_OPTIONS=/export LS_OPTIONS=/g' /root/.bashrc
-sed -i 's/^# eval "`dircolors`"/eval "`dircolors`"/g' /root/.bashrc
+sed -i 's/^# eval "`dircolors`"/eval "`dircolors`"/g'/root/.bashrc
 sed -i 's/^# alias ls=/alias ls=/g' /root/.bashrc
 sed -i 's/^# alias ll=/alias ll=/g' /root/.bashrc
 sed -i 's/^# alias l=/alias l=/g' /root/.bashrc
 
 echo "
-alias al=\"ls \$LS_OPTIONS -alh\"
-alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\"
+alias al=\"ls \$LS_OPTIONS -alh\" 
+alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\" 
 alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"
 alias createftp=\"/root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh\"
-alias newDB=\"/root/scripts/Shell/mysql/newDB.sh"
+alias newDB=\"/root/scripts/Shell/mysql/newDB.sh\"
 
 function n2ensite {
   NGINXDIR=\"/etc/nginx/\"
@@ -176,7 +177,6 @@ function n2ensite {
   echo \"Virtualhost \${1} enabled.\"
   echo \"Reload Nginx to apply changes : service nginx reload\"
 }
-
 function n2dissite {
   NGINXDIR=\"/etc/nginx/\"
   [[ \${1} = \"\" ]] && echo \"You don\'t have specified a virtualhost\" && return 1
@@ -184,7 +184,6 @@ function n2dissite {
   echo \"Virtualhost \${1} disabled.\"
   echo \"Reload Nginx to apply changes : service nginx reload\"
 }" >> /root/.bashrc && source /root/.bashrc
-
 
 
 
