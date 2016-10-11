@@ -315,7 +315,7 @@ esac
 
 echo -e "Création du logrotate\n"
 
-if [ ! -f /etc/logrotate.d/nginx ]
+if [ -f /etc/logrotate.d/nginx ]
 then
 cat >> /etc/logrotate.d/nginx << _EOF_
 /home/${username}/logs/*.log {
@@ -361,10 +361,10 @@ then
 ; Unix user/group of processes
 ; Note: The user is mandatory. If the group is not set, the default user's group
 ;       will be used.
-user = $pool
-group = $pool
+user = ${username}
+group = ${username}
  
-listen = /home/$pool/.socks/$pool.sock
+listen = /home/${username}/.socks/${username}.sock
  
 ;listen.backlog = 128
  
