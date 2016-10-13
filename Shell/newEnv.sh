@@ -578,6 +578,7 @@ echo "----------------------------------------------------
       UNIX password     : ${unix_passwd}
 
       SQL username      : ${username}
+      SQL Database      : ${username}
       SQL password      : ${sql_passwd}
 
 ----------------------------------------------------" | tee ${infoFile}
