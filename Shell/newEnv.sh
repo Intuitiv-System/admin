@@ -7,23 +7,29 @@
 # Description : Créer un nouvel utilisateur avec Vhost ( Nginx / Apache), pool fpm , espace FTP (si package installé),
 #               génère une paire de clés SSH  et nouvel utilisateur SQL + nouvelle BDD
 
+
+
+
+
 if [[ ! -d "/root/scripts" ]]; then
-    log "Please execute firstinstall.sh script before this one. Aborted..."
-      exit 1
+  log "Please execute firstinstall.sh script before this one. Aborted..."
+  exit 1
 fi
 
 generate_password() {
-        [[ -z ${1} ]] && PASS_LEN="15" || PASS_LEN=${1}
-        echo $(cat /dev/urandom|tr -dc "a-zA-Z0-9\?"|fold -w ${PASS_LEN}|head -1)
+  [[ -z ${1} ]] && PASS_LEN="15" || PASS_LEN=${1}
+  echo $(cat /dev/urandom|tr -dc "a-zA-Z0-9\?"|fold -w ${PASS_LEN}|head -1)
 }
 
 unix_passwd=$(generate_password "15")
 sql_passwd=$(generate_password "15")
-
 machineName=$(cat /etc/hostname)
 
 ##Variables
 read -p "Entrer le nom de l'utilisateur : " username
+infoFile="/root/$username.info"
+[[ -f ${infoFile} ]] && echo "A UNIX user should already exist with this name. Aborted." && echo exit 1
+
 read -p "Renseigner URL: "  url 
 
 echo -e "Quel est le serveur Web :\n"
@@ -91,7 +97,7 @@ then
     #RewriteCond %{HTTP_HOST} ^(www\.)?${username}.org [OR]
     #RewriteCond %{HTTP_HOST} ^(www\.)?ville-${username}.(fr|com|org|eu) [OR]
     #RewriteCond %{HTTP_HOST} ^(www\.)?mairie-${username}.(com|org|fr)
-    #RewriteRule ^(.*)$ http://www.cc-genevois.fr$1 [L,R=301]
+    #RewriteRule ^(.*)$ http://${url}\$1 [L,R=301]
 
     DocumentRoot /home/${username}/www/
     <Directory /home/${username}/www/>
@@ -117,7 +123,7 @@ then
     </Location>
 
   # Clear PHP settings of this website
-  <FilesMatch ".+\.ph(p[345]?|t|tml)$">
+  <FilesMatch ".+\.ph(p[345]?|t|tml)\$">
     SetHandler None
   </FilesMatch>
   <IfModule mod_fastcgi.c>
@@ -125,7 +131,7 @@ then
       Order allow,deny
       Allow from all
     </Directory>
-    <FilesMatch "\.php[345]?$">
+    <FilesMatch "\.php[345]?\$">
       SetHandler php5-fcgi
     </FilesMatch>
     Action php5-fcgi /php5-fcgi
@@ -158,7 +164,7 @@ else
     #RewriteCond %{HTTP_HOST} ^(www\.)?${username}.org [OR]
     #RewriteCond %{HTTP_HOST} ^(www\.)?ville-${username}.(fr|com|org|eu) [OR]
     #RewriteCond %{HTTP_HOST} ^(www\.)?mairie-${username}.(com|org|fr)
-    #RewriteRule ^(.*)$ http://www.${username}.fr$1 [L,R=301]
+    #RewriteRule ^(.*)$ http://www.${username}.fr\$1 [L,R=301]
 
     DocumentRoot /home/${username}/www/
     <Directory /home/${username}/www/>
@@ -182,7 +188,7 @@ else
     </Location>
 
   # Clear PHP settings of this website
-  <FilesMatch ".+\.ph(p[345]?|t|tml)$">
+  <FilesMatch ".+\.ph(p[345]?|t|tml)\$">
     SetHandler None
   </FilesMatch>
   <IfModule mod_fastcgi.c>
@@ -191,7 +197,7 @@ else
       #Allow from all
       Require all granted
     </Directory>
-    <FilesMatch "\.php[345]?$">
+    <FilesMatch "\.php[345]?\$">
       SetHandler php5-fcgi
     </FilesMatch>
     Action php5-fcgi /php5-fcgi
@@ -216,7 +222,15 @@ fi
 if [ ! -f /etc/nginx/sites-available/${url} ]
 then
   cat >> /etc/nginx/sites-available/${url} << _END3_
-    server {
+# Redirection to principal domain name
+# & www. management
+server {
+    listen 80;
+    server_name toto.com titi.com;
+    return 301 http://${url}\$request_uri;
+}
+
+server {
  
     listen 80;
     server_name ${url};
@@ -236,8 +250,8 @@ then
     root /home/${username}/www;
  
     ## Htpasswd
-    auth_basic "Restricted";
-    auth_basic_user_file /home/${username}/.htpasswd;
+    #auth_basic "Restricted";
+    #auth_basic_user_file /home/${username}/.htpasswd;
  
  
     ## Access and error logs.
@@ -253,19 +267,19 @@ then
     location ~* files/styles {
         access_log off;
         expires 30d;
-        try_files $uri @drupal;
+        try_files \$uri @drupal;
     }
  
     ## serve imagecache files directly or redirect to drupal if they do not exist.
     location ~* ^.+.(xsl|xml)$ {
         access_log off;
         expires 1d;
-        try_files $uri @drupal;
+        try_files \$uri @drupal;
     }
  
     ## Default location
     location / {
-        try_files $uri $uri/ @drupal;
+        try_files \$uri \$uri/ @drupal;
         index  index.php;
     }
  
@@ -276,7 +290,7 @@ then
     }
  
     location @drupal {
-        rewrite ^/(.*)$ /index.php?q=$1 last;
+        rewrite ^/(.*)\$ /index.php?q=\$1 last;
     }
  
     ## Images and static content is treated different
@@ -303,12 +317,12 @@ then
         # Custom conf
         fastcgi_split_path_info ^(.+\.php)(.*)$;
         #fastcgi_index  index.php;
-        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
-        fastcgi_param  SCRIPT_NAME      $fastcgi_script_name;
-        fastcgi_param  QUERY_STRING     $query_string;
-        fastcgi_param  REQUEST_METHOD   $request_method;
-        fastcgi_param  CONTENT_TYPE     $content_type;
-        fastcgi_param  CONTENT_LENGTH   $content_length;
+        fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+        fastcgi_param  SCRIPT_NAME      \$fastcgi_script_name;
+        fastcgi_param  QUERY_STRING     \$query_string;
+        fastcgi_param  REQUEST_METHOD   \$request_method;
+        fastcgi_param  CONTENT_TYPE     \$content_type;
+        fastcgi_param  CONTENT_LENGTH   \$content_length;
         fastcgi_intercept_errors        on;
         fastcgi_ignore_client_abort     off;
         fastcgi_connect_timeout 300;
@@ -398,13 +412,13 @@ then
 ; When not set, the global prefix (or /usr) applies instead.
 ; Note: This directive can also be relative to the global prefix.
 ; Default Value: none
-;prefix = /path/to/pools/$pool
+;prefix = /path/to/pools/\$pool
  
 ; Unix user/group of processes
 ; Note: The user is mandatory. If the group is not set, the default user's group
 ;       will be used.
-user = ${username}
-group = ${username}
+user = \$pool
+group = \$pool
  
 listen = /home/${username}/.socks/${username}.sock
  
@@ -440,7 +454,7 @@ pm.max_spare_servers = 10
  
 ; The access log file
 ; Default: not set
-;access.log = log/$pool.access.log
+;access.log = log/\$pool.access.log
  
 ; The access log format.
 ; Default: "%R - %u %t \"%m %r\" %s"
@@ -448,7 +462,7 @@ pm.max_spare_servers = 10
  
 ; The log file for slow requests
 ; Default Value: not set
-;slowlog = log/$pool.log.slow
+;slowlog = log/\$pool.log.slow
 ;request_slowlog_timeout = 0
  
 ;request_terminate_timeout = 0
@@ -471,25 +485,25 @@ chdir = /
  
 ;catch_workers_output = yes
  
-; Pass environment variables like LD_LIBRARY_PATH. All $VARIABLEs are taken from
+; Pass environment variables like LD_LIBRARY_PATH. All \$VARIABLEs are taken from
 ; the current environment.
 ; Default Value: clean env
-;env[HOSTNAME] = $HOSTNAME
+;env[HOSTNAME] = \$HOSTNAME
 ;env[PATH] = /usr/local/bin:/usr/bin:/bin
 ;env[TMP] = /tmp
 ;env[TMPDIR] = /tmp
 ;env[TEMP] = /tmp
  
-php_admin_value[open_basedir] = /home/$pool/www:/home/$pool/tmp:/home/$pool/sessions:/usr/share/php5:/usr/share/php:/tmp:/home/solr
-php_admin_value[session.save_path] = /home/$pool/sessions
-php_admin_value[upload_tmp_dir] = /home/$pool/tmp
+php_admin_value[open_basedir] = /home/\$pool/www:/home/\$pool/tmp:/home/\$pool/sessions:/usr/share/php5:/usr/share/php:/tmp
+php_admin_value[session.save_path] = /home/\$pool/sessions
+php_admin_value[upload_tmp_dir] = /home/\$pool/tmp
 ;php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f contact@ovm08.itserver.fr
  
 ;;; Gestion des erreurs
 ; Affichage des erreurs
 php_flag[display_errors] = off
 ; Log des erreurs
-php_admin_value[error_log] = /home/$pool/logs/fpm-php.log
+php_admin_value[error_log] = /home/\$pool/logs/fpm-php.log
 php_admin_flag[log_errors] = on
  
 ;;; Valeurs custom php.ini
@@ -520,23 +534,20 @@ fi
 
 if [ $DB -eq 1 ]
 then
-Q1="CREATE DATABASE IF NOT EXISTS ${username} CHARACTER SET utf8;"
-Q2="CREATE USER '${username}'@'localhost' IDENTIFIED BY '${sql_passwd}';"
-Q3="GRANT ALL PRIVILEGES ON ${username}.* TO '${username}'@'localhost';"
-Q4="FLUSH PRIVILEGES;"
-SQL="${Q1}${Q2}${Q3}${Q4}"
-
-mysql -u root -p -e "${SQL}"
-
+  Q1="CREATE DATABASE IF NOT EXISTS ${username} CHARACTER SET utf8;"
+  Q2="CREATE USER '${username}'@'localhost' IDENTIFIED BY '${sql_passwd}';"
+  Q3="GRANT ALL PRIVILEGES ON ${username}.* TO '${username}'@'localhost';"
+  Q4="FLUSH PRIVILEGES;"
+  SQL="${Q1}${Q2}${Q3}${Q4}"
+  mysql -u root -p -e "${SQL}"
 elif [ $DB -eq 2 ]
 then
-Q1="CREATE DATABASE IF NOT EXISTS ${username} CHARACTER SET utf8mb4;"
-Q2="CREATE USER '${username}'@'localhost' IDENTIFIED BY '${sql_passwd}';"
-Q3="GRANT ALL PRIVILEGES ON ${username}.* TO '${username}'@'localhost';"
-Q4="FLUSH PRIVILEGES;"
-SQL="${Q1}${Q2}${Q3}${Q4}"
-mysql -u root -p -e "${SQL}"
-
+  Q1="CREATE DATABASE IF NOT EXISTS ${username} CHARACTER SET utf8mb4;"
+  Q2="CREATE USER '${username}'@'localhost' IDENTIFIED BY '${sql_passwd}';"
+  Q3="GRANT ALL PRIVILEGES ON ${username}.* TO '${username}'@'localhost';"
+  Q4="FLUSH PRIVILEGES;"
+  SQL="${Q1}${Q2}${Q3}${Q4}"
+  mysql -u root -p -e "${SQL}"
 fi
 
 ##Création espace FTP
@@ -545,7 +556,7 @@ then
   echo "Le package pure-ftpd-mysql ne semble pas être installé"
 
 else
-bash /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh
+  chmod 700 /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh && /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh
 fi
 
 ##SSH-Keygen
@@ -557,14 +568,37 @@ runuser -l $username -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
 
 echo "----------------------------------------------------"
 
-echo "      UNIX username     : ${username}
+  New informations about ${url} environnement :
+
+      UNIX username     : ${username}
       UNIX password     : ${unix_passwd}
 
       SQL username      : ${username}
       SQL password      : ${sql_passwd}"
 
-echo "----------------------------------------------------"
+----------------------------------------------------" | tee ${infoFile}
+echo ""
+echo "[INFO] Vhost will have to be activated"
+echo ""
 
-echo "Vhost will have to be activated"
+read -p "Press enter when you have saved all informations"
+
+echo "Informations have been saved in ${infoFile}.
+Do you want to delete it ?"
+
+select delete in Yes No
+do
+  case $delete in
+    Yes)
+      rm {infoFile} && break
+    ;;
+    No)
+      break
+    ;;
+    *)
+      echo "Do you want to delete it ? (Yyes/No)"
+    ;;
+  esac
+done
 
 exit 0
