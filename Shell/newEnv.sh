@@ -8,9 +8,6 @@
 #               génère une paire de clés SSH  et nouvel utilisateur SQL + nouvelle BDD
 
 
-
-
-
 if [[ ! -d "/root/scripts" ]]; then
   log "Please execute firstinstall.sh script before this one. Aborted..."
   exit 1
@@ -30,7 +27,7 @@ read -p "Entrer le nom de l'utilisateur : " username
 infoFile="/root/$username.info"
 [[ -f ${infoFile} ]] && echo "A UNIX user should already exist with this name. Aborted." && echo exit 1
 
-read -p "Renseigner URL: "  url 
+read -p "Renseigner URL: "  url
 
 echo -e "Quel est le serveur Web :\n"
 
@@ -231,10 +228,10 @@ server {
 }
 
 server {
- 
+
     listen 80;
     server_name ${url};
- 
+
     # SSL configuration
     #
     # listen 443 ssl default_server;
@@ -244,55 +241,55 @@ server {
     # Don't use them in a production server!
     #
     # include snippets/snakeoil.conf;
- 
- 
+
+
     ## DocumentRoot
     root /home/${username}/www;
- 
+
     ## Htpasswd
     #auth_basic "Restricted";
     #auth_basic_user_file /home/${username}/.htpasswd;
- 
- 
+
+
     ## Access and error logs.
     access_log /home/${username}/logs/access.log;
     error_log /home/${username}/logs/error.log;
- 
- 
+
+
     # Add index.php to the list if you are using PHP
     index index.php index.html index.htm index.nginx-debian.html;
- 
- 
+
+
     ## serve imagecache files directly or redirect to drupal if they do not exist.
     location ~* files/styles {
         access_log off;
         expires 30d;
         try_files \$uri @drupal;
     }
- 
+
     ## serve imagecache files directly or redirect to drupal if they do not exist.
     location ~* ^.+.(xsl|xml)$ {
         access_log off;
         expires 1d;
         try_files \$uri @drupal;
     }
- 
+
     ## Default location
     location / {
         try_files \$uri \$uri/ @drupal;
         index  index.php;
     }
- 
+
     # Don't allow direct access to PHP files in the vendor directory.
     location ~ /vendor/.*\.php$ {
         deny all;
         return 404;
     }
- 
+
     location @drupal {
         rewrite ^/(.*)\$ /index.php?q=\$1 last;
     }
- 
+
     ## Images and static content is treated different
     location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico|xml)$ {
         access_log off;
@@ -300,13 +297,13 @@ server {
         add_header Pragma public;
         add_header Cache-Control "public, must-revalidate, proxy-revalidate";
     }
- 
+
     location = /robots.txt {
         allow all;
         log_not_found off;
         access_log off;
     }
- 
+
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         # With php5-cgi alone:
@@ -333,7 +330,7 @@ server {
         fastcgi_busy_buffers_size 256k;
         fastcgi_temp_file_write_size 256k;
     }
- 
+
     # deny access to .htaccess files, if Apache's document root
     # concurs with nginx's one
     #
@@ -347,16 +344,16 @@ server {
         log_not_found off;
         access_log off;
     }
- 
+
     location ~ ^/sites/.*/private/ {
         return 403;
     }
- 
+
     # Allow "Well-Known URIs" as per RFC 5785
     location ~* ^/.well-known/ {
         allow all;
     }
- 
+
     # Block access to "hidden" files and directories whose names begin with a
     # period. This includes directories used by version control systems such
     # as Subversion or Git to store control files.
@@ -399,8 +396,8 @@ echo -e "Création du pool FPM\n"
 if [ ! -f /etc/php5/fpm/pool.d/${username}.conf ]
 then
   cat >>  /etc/php5/fpm/pool.d/${username}.conf << _EOF_
-[{$username}]
- 
+[$username]
+
 ; Per pool prefix
 ; It only applies on the following directives:
 ; - 'slowlog'
@@ -413,78 +410,78 @@ then
 ; Note: This directive can also be relative to the global prefix.
 ; Default Value: none
 ;prefix = /path/to/pools/\$pool
- 
+
 ; Unix user/group of processes
 ; Note: The user is mandatory. If the group is not set, the default user's group
 ;       will be used.
 user = \$pool
 group = \$pool
- 
+
 listen = /home/${username}/.socks/${username}.sock
- 
+
 ;listen.backlog = 128
- 
+
 listen.owner = www-data
 listen.group = www-data
 ;listen.mode = 0660
- 
+
 listen.allowed_clients = 127.0.0.1
- 
+
 ; Specify the nice(2) priority to apply to the pool processes (only if set)
 ; The value can vary from -19 (highest priority) to 20 (lower priority)
 ; Default Value: no set
 ; priority = -19
- 
+
 pm = dynamic
- 
+
 pm.max_children = 20
 pm.start_servers = 5
 pm.min_spare_servers = 5
 pm.max_spare_servers = 10
 ; Note: Used only when pm is set to 'ondemand'
 ;pm.process_idle_timeout = 10s;
- 
+
 ; The number of requests each child process should execute before respawning.
 ; Default Value: 0
 ;pm.max_requests = 500
- 
+
 ; This directive may be used to customize the response of a ping request. The
 ; Default Value: pong
 ;ping.response = pong
- 
+
 ; The access log file
 ; Default: not set
 ;access.log = log/\$pool.access.log
- 
+
 ; The access log format.
 ; Default: "%R - %u %t \"%m %r\" %s"
 ;access.format = "%R - %u %t \"%m %r%Q%q\" %s %f %{mili}d %{kilo}M %C%%"
- 
+
 ; The log file for slow requests
 ; Default Value: not set
 ;slowlog = log/\$pool.log.slow
 ;request_slowlog_timeout = 0
- 
+
 ;request_terminate_timeout = 0
- 
+
 ; Set open file descriptor rlimit.
 ; Default Value: system defined value
 ;rlimit_files = 1024
- 
+
 ; Set max core size rlimit.
 ; Possible Values: 'unlimited' or an integer greater or equal to 0
 ; Default Value: system defined value
 ;rlimit_core = 0
- 
+
 ;chroot =
- 
+
 ; Chdir to this directory at the start.
 ; Note: relative path can be used.
 ; Default Value: current directory or / when chroot
 chdir = /
- 
+
 ;catch_workers_output = yes
- 
+
 ; Pass environment variables like LD_LIBRARY_PATH. All \$VARIABLEs are taken from
 ; the current environment.
 ; Default Value: clean env
@@ -493,24 +490,24 @@ chdir = /
 ;env[TMP] = /tmp
 ;env[TMPDIR] = /tmp
 ;env[TEMP] = /tmp
- 
+
 php_admin_value[open_basedir] = /home/\$pool/www:/home/\$pool/tmp:/home/\$pool/sessions:/usr/share/php5:/usr/share/php:/tmp
 php_admin_value[session.save_path] = /home/\$pool/sessions
 php_admin_value[upload_tmp_dir] = /home/\$pool/tmp
 ;php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f contact@ovm08.itserver.fr
- 
+
 ;;; Gestion des erreurs
 ; Affichage des erreurs
 php_flag[display_errors] = off
 ; Log des erreurs
 php_admin_value[error_log] = /home/\$pool/logs/fpm-php.log
 php_admin_flag[log_errors] = on
- 
+
 ;;; Valeurs custom php.ini
 php_admin_value[memory_limit] = 256M
 php_admin_value[post_max_size] = 30M
 php_admin_value[upload_max_filesize] = 30M
- 
+
 ; SECURITY
 php_admin_value[magic_quotes_gpc]=0
 php_admin_value[register_globals]=0
@@ -522,15 +519,22 @@ php_admin_value[expose_php]=0
 php_admin_value[allow_url_fopen]=1
 php_admin_value[safe_mode]=0
 ;php_admin_value[cgi.fix_pathinfo]=1
- 
+
 ; Liste of authorized extensions with php-fpm
 security.limit_extensions = .php .php5 .php3 .php4 .html .htm
 _EOF_
 fi
 
+##test root SQL Password
+
+read -s -p "Enter MYSQL root password: " mysqlRootPassword
+
+while ! mysql -u root -p$mysqlRootPassword  -e ";" ; do
+        read -s -p "Can't connect, please retry: " mysqlRootPassword
+done
+
+
 ## Création BDD et USER
-
-
 
 if [ $DB -eq 1 ]
 then
@@ -539,7 +543,7 @@ then
   Q3="GRANT ALL PRIVILEGES ON ${username}.* TO '${username}'@'localhost';"
   Q4="FLUSH PRIVILEGES;"
   SQL="${Q1}${Q2}${Q3}${Q4}"
-  mysql -u root -p -e "${SQL}"
+  mysql -u root -p$mysqlRootPassword -e "${SQL}"
 elif [ $DB -eq 2 ]
 then
   Q1="CREATE DATABASE IF NOT EXISTS ${username} CHARACTER SET utf8mb4;"
@@ -547,7 +551,7 @@ then
   Q3="GRANT ALL PRIVILEGES ON ${username}.* TO '${username}'@'localhost';"
   Q4="FLUSH PRIVILEGES;"
   SQL="${Q1}${Q2}${Q3}${Q4}"
-  mysql -u root -p -e "${SQL}"
+  mysql -u root -p$mysqlRootPassword -e "${SQL}"
 fi
 
 ##Création espace FTP
@@ -566,7 +570,7 @@ runuser -l $username -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
 
 /etc/init.d/php5-fpm restart
 
-echo "----------------------------------------------------"
+echo "----------------------------------------------------
 
   New informations about ${url} environnement :
 
@@ -574,7 +578,7 @@ echo "----------------------------------------------------"
       UNIX password     : ${unix_passwd}
 
       SQL username      : ${username}
-      SQL password      : ${sql_passwd}"
+      SQL password      : ${sql_passwd}
 
 ----------------------------------------------------" | tee ${infoFile}
 echo ""
