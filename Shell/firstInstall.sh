@@ -168,6 +168,7 @@ alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E
 alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"
 alias createftp=\"/root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh\"
 alias newDB=\"/root/scripts/Shell/mysql/newDB.sh\"
+alias newenv=\"/root/scripts/Shell/newEnv.sh\"
 
 function n2ensite {
   NGINXDIR=\"/etc/nginx/\"
