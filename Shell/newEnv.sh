@@ -24,6 +24,9 @@ machineName=$(cat /etc/hostname)
 
 ##Variables
 read -p "Entrer le nom de l'utilisateur : " username
+username2="web"
+#Concaténation username + web
+userPool="${username}${username2}"
 infoFile="/root/$username.info"
 [[ -f ${infoFile} ]] && echo "A UNIX user should already exist with this name. Aborted." && echo exit 1
 
@@ -70,7 +73,8 @@ echo "${username}:${unix_passwd}" | chpasswd
 mkdir /home/$username/{www,tmp,logs,sessions,.socks,cgi-bin}
 chown -R $username:$username /home/$username/{www,tmp,logs,sessions,.socks,cgi-bin}
 
-
+##Création du user pour le pool FPM
+useradd -s /bin/false ${userPool}
 
 case $servWeb in
   1*)
@@ -221,11 +225,11 @@ then
   cat >> /etc/nginx/sites-available/${url} << _END3_
 # Redirection to principal domain name
 # & www. management
-server {
-    listen 80;
-    server_name toto.com titi.com;
-    return 301 http://${url}\$request_uri;
-}
+#server {
+#    listen 80;
+#    server_name toto.com titi.com;
+#    return 301 http://${url}\$request_uri;
+#}
 
 server {
 
@@ -396,7 +400,7 @@ echo -e "Création du pool FPM\n"
 if [ ! -f /etc/php5/fpm/pool.d/${username}.conf ]
 then
   cat >>  /etc/php5/fpm/pool.d/${username}.conf << _EOF_
-[$username]
+[$userPool]
 
 ; Per pool prefix
 ; It only applies on the following directives:
@@ -409,7 +413,7 @@ then
 ; When not set, the global prefix (or /usr) applies instead.
 ; Note: This directive can also be relative to the global prefix.
 ; Default Value: none
-;prefix = /path/to/pools/\$pool
+;prefix = /path/to/pools/\${username}
 
 ; Unix user/group of processes
 ; Note: The user is mandatory. If the group is not set, the default user's group
@@ -451,7 +455,7 @@ pm.max_spare_servers = 10
 
 ; The access log file
 ; Default: not set
-;access.log = log/\$pool.access.log
+;access.log = log/\${username}.access.log
 
 ; The access log format.
 ; Default: "%R - %u %t \"%m %r\" %s"
@@ -459,7 +463,7 @@ pm.max_spare_servers = 10
 
 ; The log file for slow requests
 ; Default Value: not set
-;slowlog = log/\$pool.log.slow
+;slowlog = log/\${username}.log.slow
 ;request_slowlog_timeout = 0
 
 ;request_terminate_timeout = 0
@@ -491,16 +495,16 @@ chdir = /
 ;env[TMPDIR] = /tmp
 ;env[TEMP] = /tmp
 
-php_admin_value[open_basedir] = /home/\$pool/www:/home/\$pool/tmp:/home/\$pool/sessions:/usr/share/php5:/usr/share/php:/tmp
-php_admin_value[session.save_path] = /home/\$pool/sessions
-php_admin_value[upload_tmp_dir] = /home/\$pool/tmp
+php_admin_value[open_basedir] = /home/${username}/www:/home/${username}/tmp:/home/${username}/sessions:/usr/share/php5:/usr/share/php:/tmp
+php_admin_value[session.save_path] = /home/${username}/sessions
+php_admin_value[upload_tmp_dir] = /home/${username}/tmp
 ;php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f contact@ovm08.itserver.fr
 
 ;;; Gestion des erreurs
 ; Affichage des erreurs
 php_flag[display_errors] = off
 ; Log des erreurs
-php_admin_value[error_log] = /home/\$pool/logs/fpm-php.log
+php_admin_value[error_log] = /home/${username}/logs/fpm-php.log
 php_admin_flag[log_errors] = on
 
 ;;; Valeurs custom php.ini
@@ -563,6 +567,42 @@ else
   chmod 700 /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh && /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh
 fi
 
+if [ -d /home/${username}/www/sites/default/files ]
+then
+  echo "Changement de permission de /default/files"
+  chown -R ${userPool}:${userPool} /home/${username}/www/sites/default/files
+fi
+
+##Création des ACL
+
+if [ ! -f /root/aclFiles.lst ] || [ ! -f /root/aclLogs.lst ]
+then
+  cat >> /root/aclFiles.lst << _EOF_
+  user::rwx
+  user:${username}:rwx
+  group::r-x
+  other:r--
+  default:user:${userPool}:rwx
+  default:group::r-x
+_EOF_
+
+
+cat >> /root/aclLogs.lst << _EOF_
+
+  user::rwx
+  user:${userPool}:rwx
+  group::r-x
+  other:r--
+  default:user:${username}:rwx
+  default:group::r-x
+_EOF_
+
+echo "Activation des ACL sur les dossiers /logs /tmp /sessions"
+setfacl -M /root/aclLogs.lst /home/${username}/{tmp,logs,sessions}
+else
+  echo "Les fichiers d'ACL ont déjà été créés"
+fi
+
 ##SSH-Keygen
 
 runuser -l $username -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
@@ -576,6 +616,7 @@ echo "----------------------------------------------------
 
       UNIX username     : ${username}
       UNIX password     : ${unix_passwd}
+      USER FPM          : ${userPool}
 
       SQL username      : ${username}
       SQL Database      : ${username}
@@ -584,7 +625,7 @@ echo "----------------------------------------------------
 ----------------------------------------------------" | tee ${infoFile}
 echo ""
 echo "[INFO] Vhost will have to be activated"
-echo ""
+echo "[INFO] ACL will have to be set"
 
 read -p "Press enter when you have saved all informations"
 
