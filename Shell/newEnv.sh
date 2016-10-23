@@ -636,7 +636,7 @@ select delete in Yes No
 do
   case $delete in
     Yes)
-      rm {infoFile} && break
+      rm ${infoFile} && break
     ;;
     No)
       break
