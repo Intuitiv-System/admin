@@ -93,10 +93,10 @@ then
   chown -R www-data:www-data ${CHECK_OPCACHE}
 fi
   cd /tmp
-  wget "https://github.com/lazzio/admin/blob/master/Applicatifs/Nagios/nagios_check/check_opcache.php"
+  wget "https://raw.githubusercontent.com/lazzio/admin/master/Applicatifs/Nagios/nagios_check/check_opcache.php"
   mv /tmp/check_opcache.php ${CHECK_OPCACHE}
   perl -pi.orig -e 's#\r\n#\n#g' ${CHECK_OPCACHE}
-  chmod 755 ${CHECK_OPCACHE}/check_opcache.php
+  chmod 644 ${CHECK_OPCACHE}/check_opcache.php
   
  # Creation of Postfix mailq check script
 CHECK_MAILQ="/usr/lib/nagios/plugins/check_postfix_queue"
