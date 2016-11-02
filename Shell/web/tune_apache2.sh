@@ -13,7 +13,7 @@
 APACHECONF="/etc/apache2/apache2.conf"
 TOTALMEM=$(free -m | sed -n 2p | awk '{print $2}')
 ALLOWEDMEM=$(expr ${TOTALMEM} / 2)
-
+version=$(apache2 -v | grep version | awk {'print $3'} | awk -F / {'print $2'} | awk -F . {'print $2'})
 
 usage() {
     ::
@@ -26,7 +26,7 @@ CheckDistrib()
     DIR=$(pwd)
     FILE=$(basename $0)
     if [[ ${DISTRIB} = "Ubuntu" ]]; then
-        if [[ $(whoami) != "root" ]]; then 
+        if [[ $(whoami) != "root" ]]; then
             echo "Login as root and execute this command : ${DIR}/${FILE}" && sudo su -
             exit 0
         fi
@@ -66,10 +66,39 @@ MPMPREFORK=$(dpkg -l | grep apache2-mpm-prefork | wc -l)
 #[[ ${MPMPREFORK} -nq 1 ]] && echo "Apache2 is not installed" && exit 1
 
 # Recover actual MPM informations
-ACTUALCONF=$(sed '/^<IfModule mpm_prefork_module>/,/^<\/IfModule>/!d' ${APACHECONF})
+#ACTUALCONF=$(sed '/^<IfModule mpm_prefork_module>/,/^<\/IfModule>/!d' ${APACHECONF})
 
+apache2ctl -V > /tmp/config_apache.txt
+mpm=$(cat /tmp/config_apache.txt | grep MPM | awk '{print $3}')
 
+if [[ "${version}" = "4" ]]
+then
+  if [[ "$mpm" = "event" ]]
+    then
+    ACTUALCONF=$(sed '/^<IfModule mpm_event_module>/,/^<\/IfModule>/!d' /etc/apache2/mods-enabled/mpm_event.conf)
+  elif [[ "$mpm" = "worker" ]]
+    then
+    ACTUALCONF=$(sed '/^<IfModule mpm_worker_module>/,/^<\/IfModule>/!d' /etc/apache2/mods-enabled/mpm_worker.conf)
+  elif [[ "$mpm" = "prefork" ]]
+    then
+    ACTUALCONF=$(sed '/^<IfModule mpm_prefork_module>/,/^<\/IfModule>/!d' /etc/apache2/mods-enabled/mpm_prefork.conf)
+  fi
 
+else
+  echo "${mpm}"
+  if [[ "${mpm}" = "Worker" ]]
+    then
+    echo "it works"
+    ACTUALCONF=$(sed '/^<IfModule mpm_worker_module>/,/^<\/IfModule>/!d' ${APACHECONF})
+  elif [[ "${mpm}" = "Event" ]]
+    then
+    ACTUALCONF=$(sed '/^<IfModule mpm_event_module>/,/^<\/IfModule>/!d' ${APACHECONF})
+  elif [[ "$mpm" = "Prefork" ]]
+    then
+    ACTUALCONF=$(sed '/^<IfModule mpm_prefork_module>/,/^<\/IfModule>/!d' ${APACHECONF})
+  fi
+
+fi
 
 
 ##################
@@ -81,7 +110,7 @@ ACTUALCONF=$(sed '/^<IfModule mpm_prefork_module>/,/^<\/IfModule>/!d' ${APACHECO
 [[ ! -f ${APACHECONF} ]] && echo "The file ${APACHECONF} doesn't exist" && exit 1
 
 CheckDistrib
-echo "Actual Configuration of MPM Prefork is :"
+echo "Actual Configuration of MPM ${mpm} is :"
 echo "${ACTUALCONF}"
 
 avgMemApacheUsed
@@ -95,7 +124,7 @@ echo "Maximum number of Apache process allowed on the server : ${MAXALLOWEDCLIEN
 
 maxMemApacheUsed
 echo ""
-echo -e "A proposal of Apache2 MPM-prefork configuration can be :
+echo -e "A proposal of Apache2 MPM ${mpm} configuration can be :
     StartServers          5
     MinSpareServers       5
     MaxSpareServers       10
