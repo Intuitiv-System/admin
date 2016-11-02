@@ -70,6 +70,7 @@ MPMPREFORK=$(dpkg -l | grep apache2-mpm-prefork | wc -l)
 
 apache2ctl -V > /tmp/config_apache.txt
 mpm=$(cat /tmp/config_apache.txt | grep MPM | awk '{print $3}')
+mpm=$(echo "$mpm" | tr '[:upper:]' '[:lower:]')
 
 if [[ "${version}" = "4" ]]
 then
@@ -85,15 +86,13 @@ then
   fi
 
 else
-  echo "${mpm}"
-  if [[ "${mpm}" = "Worker" ]]
+  if [[ "${mpm}" = "worker" ]]
     then
-    echo "it works"
     ACTUALCONF=$(sed '/^<IfModule mpm_worker_module>/,/^<\/IfModule>/!d' ${APACHECONF})
-  elif [[ "${mpm}" = "Event" ]]
+  elif [[ "${mpm}" = "event" ]]
     then
     ACTUALCONF=$(sed '/^<IfModule mpm_event_module>/,/^<\/IfModule>/!d' ${APACHECONF})
-  elif [[ "$mpm" = "Prefork" ]]
+  elif [[ "$mpm" = "prefork" ]]
     then
     ACTUALCONF=$(sed '/^<IfModule mpm_prefork_module>/,/^<\/IfModule>/!d' ${APACHECONF})
   fi
@@ -123,13 +122,28 @@ echo "Maximum Memory proposed for Apache2 : ${ALLOWEDMEM} Mo"
 echo "Maximum number of Apache process allowed on the server : ${MAXALLOWEDCLIENTS}"
 
 maxMemApacheUsed
-echo ""
-echo -e "A proposal of Apache2 MPM ${mpm} configuration can be :
+if [[ "${mpm}" = "prefork" ]]
+  then
+    echo ""
+    echo -e "A proposal of Apache2 MPM Prefork configuration can be :
     StartServers          5
     MinSpareServers       5
     MaxSpareServers       10
     MaxClients            ${MAXALLOWEDCLIENTS}
     MaxRequestsPerChild   1000
 "
+else
+  echo""
+  echo -e "A proposal of Apache2 MPM ${mpm} configuration can be 
+      StartServers         5
+      MinSpareThreads      25
+      MaxSpareThreads      75
+      ThreadLimit          64
+      ThreadsPerChild      25
+      MaxClients            ${MAXALLOWEDCLIENTS}
+      MaxRequestsPerChild   1000
+"
+
+fi
 
 exit 0
