@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Filename : lvm_extend.sh
+# Version  : 1.0
+# Author   : Aurélien Dubus
+# Contrib  :
+# Description : Extend a Logical Volume with a disk that is not formated yet.
+#               The script requires that ONLY ONE Volume Group is on the machine
+
 usage(){
 echo -e " 
        -d : Specify the disk to format. It will be used to extend the LV
@@ -9,24 +16,26 @@ echo -e "
 }
 info(){
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 volume_info=$(lsblk | grep sd)
 pv_info=$(pvdisplay | grep "PV Name" | awk {'print $3}')
 lv_info=$(lvdisplay | grep "LV Name" | awk {'print $3}')
 vg_info=$(vgdisplay | grep "VG Name" | awk {'print $3}')
 echo -e "
-            ---- ${RED} Volume Informations ${NC} ----\n
+------------- ${RED} Volume Informations ${NC}   -----------------------\n
+${volume_info}
 
-                ${volume_info}
+------------- ${GREEN}   Actual PV ${NC}         -----------------------\n
+\n${pv_info}\n
 
-            ---- ${RED} Actual PV ${NC} ----
-                \n${pv_info}\n
+------------- ${BLUE}   Actual LV ${NC}          -----------------------\n
+${lv_info}
 
-            ---- ${RED} Actual LV ${NC} ----\n
-                ${lv_info}
-
-            ---- ${RED} Actual VG ${NC} ----\n
-                ${vg_info}
+------------- ${YELLOW}   Actual VG ${NC}        -----------------------\n
+${vg_info}
         "
 }
 
