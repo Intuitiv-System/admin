@@ -6,8 +6,7 @@ echo -e " -d, --disk : Specify the disk to format. It will be used to extend the
        -h, --help : Display this help"
 }
 
-lvmInstalled=$(dpkg -s lvm2)
-volumeGroup=$(vgdisplay | grep Name | awk '{print $3}')
+lvmInstalled=$(dpkg -s lvm2 >/dev/null 2>&1)
 test=$(echo $?)
 if [[ ${test} = "1" ]]
 then
@@ -20,6 +19,8 @@ then
   exit 1
 
 else
+volumeGroup=$(vgdisplay | grep Name | awk '{print $3}')
+
   while getopts ":d:v:h" opt; do
     case $opt in
       d | disk) disk="$OPTARG"
@@ -39,7 +40,7 @@ else
         ;;
     esac
     ##Creating a partition
-    (echo g; echo n; echo p; echo 1; echo; echo; echo w) | fdisk ${OPTARG} > /dev/null 2>&1 && echo "One partition created successfuly on ${OPTARG}"
+    (echo g; echo n; echo p; echo 1; echo; echo; echo w) | fdisk ${disk} > /dev/null 2>&1 && echo "One partition created successfuly on ${disk}"
     var="1"
     partition="${disk}""${var}"
     pvcreate ${partition}
