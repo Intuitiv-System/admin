@@ -1,9 +1,33 @@
 #!/bin/bash
 
 usage(){
-echo -e " -d, --disk : Specify the disk to format. It will be used to extend the LV
-       -v, --volume : Specify the logical volume to extend
-       -h, --help : Display this help"
+echo -e " 
+       -d : Specify the disk to format. It will be used to extend the LV
+       -v : Specify the logical volume to extend
+       -i : Display some infos about Volume Groups and Logical Volumes
+       -h : Display this help"
+}
+info(){
+RED='\033[0;31m'
+NC='\033[0m'
+volume_info=$(lsblk | grep sd)
+pv_info=$(pvdisplay | grep "PV Name" | awk {'print $3}')
+lv_info=$(lvdisplay | grep "LV Name" | awk {'print $3}')
+vg_info=$(vgdisplay | grep "VG Name" | awk {'print $3}')
+echo -e "
+            ---- ${RED} Volume Informations ${NC} ----\n
+
+                ${volume_info}
+
+            ---- ${RED} Actual PV ${NC} ----
+                \n${pv_info}\n
+
+            ---- ${RED} Actual LV ${NC} ----\n
+                ${lv_info}
+
+            ---- ${RED} Actual VG ${NC} ----\n
+                ${vg_info}
+        "
 }
 
 lvmInstalled=$(dpkg -s lvm2 >/dev/null 2>&1)
@@ -21,7 +45,7 @@ then
 else
 volumeGroup=$(vgdisplay | grep Name | awk '{print $3}')
 
-  while getopts ":d:v:h" opt; do
+  while getopts ":d:v:hi" opt; do
     case $opt in
       d | disk) disk="$OPTARG"
         ##test si le disque est partitionné
@@ -34,9 +58,13 @@ volumeGroup=$(vgdisplay | grep Name | awk '{print $3}')
          exit 1
         fi
         ;;
-      v | volume) volume="$OPTARG"
+      v) volume="$OPTARG"
         ;;
-      h | help) usage
+      h) usage
+        exit 1
+        ;;
+      i) info
+         exit 1
         ;;
     esac
     ##Creating a partition
