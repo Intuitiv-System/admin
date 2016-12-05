@@ -50,8 +50,27 @@ read name
 echo "${name}" > /etc/hostname
 sed -i 's/template/'"${name}"'/g' /etc/hosts
 service hostname.sh
+echo -e "127.0.0.1\t ${name}.itserver.fr\t ${name}" >> /etc/hosts
 echo "Renseigner le nouveau mot de passe root"
 read -s root_password
 echo "root:$root_password" | chpasswd
+
+read -s -p "Enter MYSQL root password: " mysqlRootPassword
+echo ""
+read -s -p "Confirm MYSQL root password: " mysqlRootPassword2
+echo ""
+
+while [ "${mysqlRootPassword}" != "${mysqlRootPassword2}" ]
+do
+  echo "Passwords don't match !"
+  read -s -p "Enter MYSQL root password: " mysqlRootPassword
+  echo ""
+  read -s -p "Confirm MYSQL root password: " mysqlRootPassword2
+done
+
+oldpwd="password"
+SQLQUERY="SET PASSWORD FOR 'root'@'localhost' = PASSWORD('${mysqlRootPassword}');"
+
+mysql -u root -p$oldpwd -e "${SQLQUERY}"
 
 exit 0
