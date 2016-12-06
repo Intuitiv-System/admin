@@ -68,7 +68,7 @@ do
   read -s -p "Confirm MYSQL root password: " mysqlRootPassword2
 done
 
-oldpwd="password"
+oldpwd="b96DV0u72MK4lobslZdS"
 SQLQUERY="SET PASSWORD FOR 'root'@'localhost' = PASSWORD('${mysqlRootPassword}');"
 
 mysql -u root -p$oldpwd -e "${SQLQUERY}"
