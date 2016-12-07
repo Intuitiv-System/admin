@@ -81,9 +81,11 @@ volumeGroup=$(vgdisplay | grep Name | awk '{print $3}')
     var="1"
     partition="${disk}""${var}"
     partition_length=$(fdisk -l | grep "${partition}" | awk '{print $5}')
+	  partition_length2=$(echo "${partition_length::-1}")
+    partition_length3=$(echo "${partition_length2} - 0.01" | bc)    
     pvcreate ${partition}
     vgextend ${volumeGroup} ${partition}
-    lvextend -L+"${partition_length}" /dev/${volumeGroup}/${volume}
+    lvextend -L+"${partition_length3}" /dev/${volumeGroup}/${volume}
     resize2fs /dev/${volumeGroup}/${volume}
   done
 fi
