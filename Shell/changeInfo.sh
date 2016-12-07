@@ -50,7 +50,7 @@ read name
 echo "${name}" > /etc/hostname
 sed -i 's/template/'"${name}"'/g' /etc/hosts
 service hostname.sh
-echo -e "127.0.0.1\t ${name}.itserver.fr\t ${name}" >> /etc/hosts
+echo -e "127.0.0.1\t ${name}.itserver.fr\t ${name} \t localhost" > /etc/hosts
 echo "Renseigner le nouveau mot de passe root"
 read -s root_password
 echo "root:$root_password" | chpasswd
@@ -72,5 +72,7 @@ oldpwd="b96DV0u72MK4lobslZdS"
 SQLQUERY="SET PASSWORD FOR 'root'@'localhost' = PASSWORD('${mysqlRootPassword}');"
 
 mysql -u root -p$oldpwd -e "${SQLQUERY}"
+
+echo "Voici le nouveau mot de passe root SQL : ${mysqlRootPassword}"
 
 exit 0
