@@ -78,6 +78,7 @@ echo "Voici le nouveau mot de passe root SQL : ${mysqlRootPassword}"
 ##Mise en place du user pour backuppc
 useradd -m -s /bin/bash backupit
 echo "backupit ALL=NOPASSWD: /usr/bin/rsync" >> /etc/sudoers
-runuser -l backupit -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
+runuser -l backupit -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa' > /dev/null 2>&1
 runuser -l backupit -c 'echo "sh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC/7UY/Fjwt1RNWvE2qBa1YEbqF8DIyUYgPiDCeLKIlwt6X2cjHnQJpzzLqKOT64MGvl5/msvi8bco46NWHnaxc2o5hh3rNCUyN2ZGJHAsE+37CekQAmiqtTHXjCpNOExK6570ZJjOhjO9G/w7pqSIHmLgSMwXcplSBAFUxGDxNTpSw75sCi0L5+14R8yx42rxMovxVfac0psVUhhIHwZbd2JxeeGv8yq69BhBi3758RDsgmkQOGk2fKVLmAu4WcEqdOGtNQNDE2d/F+0x6SnwTO8GkTrbTFPfwoKvTzvXXs1jf5raL8QQ8r+7xtXxEZnNFBsucy5I6HcZ+YM6xRKYB backuppc@bkp02.itserver.fr" > /home/backupit/.ssh/authorized_keys' 
+
 exit 0
