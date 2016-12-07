@@ -80,9 +80,10 @@ volumeGroup=$(vgdisplay | grep Name | awk '{print $3}')
     (echo g; echo n; echo p; echo 1; echo; echo; echo w) | fdisk ${disk} > /dev/null 2>&1 && echo "One partition created successfuly on ${disk}"
     var="1"
     partition="${disk}""${var}"
+    partition_length=$(fdisk -l | grep "${partition}" | awk '{print $5}')
     pvcreate ${partition}
     vgextend ${volumeGroup} ${partition}
-    lvextend -l +100%FREE /dev/${volumeGroup}/${volume}
+    lvextend -L+${parition_length} /dev/${volumeGroup}/${volume}
     resize2fs /dev/${volumeGroup}/${volume}
   done
 fi
