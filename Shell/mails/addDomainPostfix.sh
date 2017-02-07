@@ -2,6 +2,8 @@
 
 #Description : Ajoute un nom de domaine expéditeur à Postfix et génère la paire de clefs DKIM.
 
+##Partie SASL auth à rajouter au début
+
 usage(){
   filename=$(basename "$0")
   echo -e "Usage : ${filename} example.com "
