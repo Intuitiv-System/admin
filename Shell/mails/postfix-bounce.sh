@@ -7,7 +7,7 @@ senders="/tmp/senders.txt"
 log_file="/tmp/bounces.log"
 tmp1="/tmp/tmp1.txt"
 tmp2="/tmp/tmp2.txt"
-final_file="/root/bounces.log"
+final_file="/var/log/bounces.log"
 
 ##Effacer les fichiers laissés par l'exécution précédente
 [ -e ${file} ] && rm ${file}
@@ -46,5 +46,6 @@ cat ${tmp1} | logger -t BOUNCES -i -s 2>&1 | tee -a ${tmp2}
 id=$(cat ${tmp2} | cut -d "[" -f2 | cut -d "]" -f1 | head -n 1)
 id="BOUNCES\[${id}\]"
 grep -w "${id}" /var/log/syslog > ${final_file}
+chown root:adm ${final_file}
 
 exit 0
