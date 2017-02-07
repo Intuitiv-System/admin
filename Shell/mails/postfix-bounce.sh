@@ -1,18 +1,26 @@
 #!/bin/bash
 
-#allBounced=$(cat /var/log/mail.log | grep status=bounced)
 messages_id=$(cat /var/log/mail.log | grep status=bounced | awk '{print $6}' | sed 's/://')
 nbBounced=$(cat /var/log/mail.log | grep status=bounced | wc -l)
 file="/tmp/messages_id.txt"
 senders="/tmp/senders.txt"
 log_file="/tmp/bounces.log"
+tmp1="/tmp/tmp1.txt"
+tmp2="/tmp/tmp2.txt"
 final_file="/root/bounces.log"
-date_debut=$(cat /var/log/mail.log | head -n 1 | awk '{$1; $2; NF=2; print}')
-date_fin=$(tac /var/log/mail.log | head -n 1 | awk '{$1; $2; NF=2; print}')
 
-  echo -e "${messages_id}\n" > ${file}
-  sed  '/^$/d' ${file} > /tmp/tmp.txt && mv /tmp/tmp.txt ${file}
-  
+##Effacer les fichiers laissés par l'exécution précédente
+[ -e ${file} ] && rm ${file}
+[ -e ${senders} ] && rm ${senders}
+[ -e ${log_file} ] && rm ${log_file}
+[ -e ${tmp1} ] && rm ${tmp1}
+[ -e ${tmp2} ] && rm ${tmp2}
+[ -e ${final_file} ] && rm ${final_file}
+
+
+echo -e "${messages_id}\n" > ${file}
+sed  '/^$/d' ${file} > /tmp/tmp.txt && mv /tmp/tmp.txt ${file}
+
 ##On récupère les NDD qui bounce
 cat ${file} | while read line
 do
@@ -28,15 +36,15 @@ do
 
   occurences=$(grep -c "${line}" ${senders})
   stats=$(echo "scale=2; ${occurences}/${nbBounced} * 100" | bc)
-  echo -e "${line} \t ${occurences} \t \t ${stats}%" >> ${log_file}
+  echo -e "${line} ${occurences} ${stats}%" >> ${log_file}
 done
 
-echo "Rapport de bounce du ${date_debut} au ${date_fin}" > ${final_file}
-echo -e "--------------------------------------------------------------|
-        Adresses \t Nombre de Bounces \t Pourcentage  |" >> ${final_file}
-echo -e "--------------------------------------------------------------|" >> ${final_file}
-cat ${log_file} | sort -u >> /root/bounces.log
+nbBouncePerDomain=$(cat ${log_file} | sort -u > ${tmp1})
 
-##On fait un peu le ménage
-rm ${senders} ${log_file} ${file}
+#Formatage du fichier comme syslog
+cat ${tmp1} | logger -t BOUNCES -i -s 2>&1 | tee -a ${tmp2}
+id=$(cat ${tmp2} | cut -d "[" -f2 | cut -d "]" -f1 | head -n 1)
+id="BOUNCES\[${id}\]"
+grep -w "${id}" /var/log/syslog > ${final_file}
+
 exit 0
