@@ -150,7 +150,7 @@ EOF
 fi
     apt-get install libapache2-mod-fastcgi
     service apache2 restart
-cat >> /etc/apache2/sites-available/0-maintenance.conf << _EOF
+cat >> /etc/apache2/sites-available/0-maintenance.conf << _EOF_
 <VirtualHost *:80>
   ServerAdmin webmaster@intuitiv.fr
  
@@ -189,7 +189,8 @@ cat >> /etc/apache2/sites-available/0-maintenance.conf << _EOF
  
   ServerSignature Off
 </VirtualHost>
-_EOF
+_EOF_
+
   a2dissite default
   a2ensite 0-maintenance
   service apache2 reload  
@@ -440,7 +441,7 @@ fi
 _FILE_
 fi
 
-cat >> /etc/nginx/sites-enabled/0-maintenance << _END_
+cat >> /etc/nginx/sites-available/0-maintenance << _LIM
 server {
 
     listen 80;
@@ -461,7 +462,7 @@ server {
 
     ## Default location
     location / {
-        #try_files $uri $uri/ @drupal;
+        #try_files \$uri \$uri/ @drupal;
         index  index.php index.html;
     }
 
@@ -482,12 +483,12 @@ server {
         # Custom conf
         fastcgi_split_path_info ^(.+\.php)(.*)$;
         #fastcgi_index  index.php;
-        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
-        fastcgi_param  SCRIPT_NAME      $fastcgi_script_name;
-        fastcgi_param  QUERY_STRING     $query_string;
-        fastcgi_param  REQUEST_METHOD   $request_method;
-        fastcgi_param  CONTENT_TYPE     $content_type;
-        fastcgi_param  CONTENT_LENGTH   $content_length;
+        fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+        fastcgi_param  SCRIPT_NAME      \$fastcgi_script_name;
+        fastcgi_param  QUERY_STRING     \$query_string;
+        fastcgi_param  REQUEST_METHOD   \$request_method;
+        fastcgi_param  CONTENT_TYPE     \$content_type;
+        fastcgi_param  CONTENT_LENGTH   \$content_length;
         fastcgi_intercept_errors        on;
         fastcgi_ignore_client_abort     off;
         fastcgi_connect_timeout 300;
@@ -510,7 +511,7 @@ server {
     }
 
 }
-_END_ 
+_LIM
 
 if [[ ! -f /etc/nginx/sites-available/phpmyadmin ]]
 then
@@ -541,12 +542,12 @@ server {
     # Custom conf
     fastcgi_split_path_info ^(.+\.php)(.*)$;
     #fastcgi_index  index.php;
-    fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
-    fastcgi_param  SCRIPT_NAME      $fastcgi_script_name;
-    fastcgi_param  QUERY_STRING     $query_string;
-    fastcgi_param  REQUEST_METHOD   $request_method;
-    fastcgi_param  CONTENT_TYPE     $content_type;
-    fastcgi_param  CONTENT_LENGTH   $content_length;
+    fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+    fastcgi_param  SCRIPT_NAME      \$fastcgi_script_name;
+    fastcgi_param  QUERY_STRING     \$query_string;
+    fastcgi_param  REQUEST_METHOD   \$request_method;
+    fastcgi_param  CONTENT_TYPE     \$content_type;
+    fastcgi_param  CONTENT_LENGTH   \$content_length;
     fastcgi_intercept_errors        on;
     fastcgi_ignore_client_abort     off;
     fastcgi_connect_timeout 300;
