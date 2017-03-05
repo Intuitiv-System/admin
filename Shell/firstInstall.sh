@@ -163,32 +163,29 @@ sed -i 's/^# alias ll=/alias ll=/g' /root/.bashrc
 sed -i 's/^# alias l=/alias l=/g' /root/.bashrc
 
 echo "
-alias al=\"ls \$LS_OPTIONS -alh\" 
-alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\" 
+alias al=\"ls \$LS_OPTIONS -alh\"
+alias showconnections=\"netstat -ntu | awk '{print \$5}' | cut -d: -f1 | grep -E [0-9.]+ | sort | uniq -c | sort -n\"
 alias sfupdate=\"cd ${SFSVN} && git pull && chmod -R 700 ${SFSVN} && chown -R root:root ${SFSVN}\"
 alias createftp=\"/root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh\"
 alias newDB=\"/root/scripts/Shell/mysql/newDB.sh\"
 alias newenv=\"/root/scripts/Shell/newEnv.sh\"
 
 function n2ensite {
-  NGINXDIR="/etc/nginx/"
-  [[ ${1} = "" ]] && echo "You don't have specified a virtualhost" && return 1
-  cd ${NGINXDIR}/sites-enabled/
-  ln -s ${NGINXDIR}/sites-available/"${1}" "${1}"
-  echo "Virtualhost ${1} enabled."
-  echo "Reload Nginx to apply changes : service nginx reload"
+  NGINXDIR=\"/etc/nginx/\"
+  [[ \${1} = \"\" ]] && echo \"You don't have specified a virtualhost\" && return 1
+  ln -s \${NGINXDIR}/sites-available/\"\${1}\" \${NGINXDIR}/sites-enabled/\"\${1}\"
+  echo \"Virtualhost \${1} enabled.\"
+  echo \"Reload Nginx to apply changes : service nginx reload\"
 }
 
 
 function n2dissite {
-  NGINXDIR="/etc/nginx/"
-  [[ ${1} = "" ]] && echo "You don't have specified a virtualhost" && return 1
-  rm ${NGINXDIR}/sites-enabled/"${1}"
-  echo "Virtualhost ${1} disabled."
-  echo "Reload Nginx to apply changes : service nginx reload"
-}" >> /root/.bashrc && source /root/.bashrc
-
-
+  NGINXDIR=\"/etc/nginx/\"
+  [[ \${1} = \"\" ]] && echo \"You don't have specified a virtualhost\" && return 1
+  rm \${NGINXDIR}/sites-enabled/\"\${1}\"
+  echo \"Virtualhost \${1} disabled.\"
+  echo \"Reload Nginx to apply changes : service nginx reload\"
+}" >> /root/.bashrc
 
 # Custom sources.list
 cp /etc/apt/sources.list /root/sources.list
