@@ -73,9 +73,11 @@ fi
 
 apt-get update && apt-get upgrade
 
-echo "Install nginx or apache2 ?"
-read web_server
-case ${web_server} in
+while true; do
+  echo "Install nginx or apache2 ?"
+  read web_server
+
+  case ${web_server} in
   apache2)
     # Install Apache
     apt-get install apache2 php5 php5-gd php5-intl php5-xsl php5-mcrypt php5-memcached php5-fpm php5-curl curl imagemagick php5-imagick
@@ -285,7 +287,7 @@ cat >> /etc/apache2/sites-available/phpmyadmin.conf << _EOF_
 _EOF_
 fi
 
-
+break
 ;;
   nginx)
     # Install Nginx
@@ -599,12 +601,13 @@ server {
 }
 _FILE2_
 fi
-
+  break
   ;;
   *)
     echo "Choisir entre apache ou nginx "
     ;;
 esac
+done
 
 ##Faire en sorte que le logrotate d'apache soit le dernier a être exécuté
 #if [[ -f /etc/logrotate.d/apache2 ]]
@@ -821,6 +824,70 @@ log "Install monitoring NPRE : OK"
 ## Install maintenance
 rm /var/www/html/index.html
 mkdir -p /var/www/html/{www,tmp,.socks,cgi-bin}
+cat >> /var/www/html/www/index.html << _EOF_
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>En maintenance</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="robots" content="noindex" />
+    <style type="text/css"><!--
+    body {
+        color: #444444;
+        background-color: #EEEEEE;
+        font-family: 'Trebuchet MS', sans-serif;
+        font-size: 80%;
+    }
+    h1 {}
+    h2 { font-size: 1.2em; }
+    #page{
+        background-color: #FFFFFF;
+        width: 60%;
+        margin: 24px auto;
+        padding: 12px;
+    }
+    #header {
+        padding: 6px ;
+        text-align: center;
+    }
+    .status3xx { background-color: #475076; color: #FFFFFF; }
+    .status4xx { background-color: #09F; color: #FFFFFF; }
+    .status5xx { background-color: #F2E81A; color: #000000; }
+    #content {
+        padding: 4px 0 24px 10px;
+    }
+    #footer {
+        color: #666666;
+        background: #f9f9f9;
+        padding: 10px 20px;
+        border-top: 5px #efefef solid;
+        font-size: 0.8em;
+        text-align: center;
+    }
+    #footer a {
+        color: #999999;
+    }
+    --></style>
+</head>
+<body>
+    <div id="page">
+        <div id="header" class="status4xx">
+            <h1>Site en maintenance</h1>
+        </div>
+        <div id="content">
+            <h2>Site en maintenance</h2>
+            <p>Le site web est momentan&eacute;ment indisponible.</p>
+                        <P>Veuillez revenir ult&eacute;rieurement.</p>
+            <p>Merci de votre compr&eacute;hension.</p>
+        </div>
+        <div id="footer">
+        </div>
+    </div>
+</body>
+</html>
+_EOF_
+
 chown -R www-data:www-data /var/www/html/{www,tmp,.socks,cgi-bin}
 #cp /root/scripts/Shell/Monitoring-Reports/maintenance_apc_memcached.zip /var/www/www/
 cd /var/www/html/www/
