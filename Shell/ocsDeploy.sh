@@ -31,14 +31,14 @@ mkdir /var/log/ocsinventory
 touch /var/log/ocsinventory/ocsng.log
 ##Installation des dépendances
 apt-get update --fix-missing
-apt-get install dmidecode
-apt-get install libxml-simple-perl
-apt-get install libcompress-zlib-perl || apt-get install libio-compress-perl
-apt-get install libnet-ip-perl
-apt-get install libwww-perl
-apt-get install libdigest-md5-perl
-apt-get install libnet-ssleay-perl
-apt-get install gcc make
+apt-get install dmidecode -y
+apt-get install libxml-simple-perl -y
+apt-get install libcompress-zlib-perl -y || apt-get install libio-compress-perl -y
+apt-get install libnet-ip-perl -y
+apt-get install libwww-perl -y
+apt-get install libdigest-md5-perl -y
+apt-get install libnet-ssleay-perl -y
+apt-get install gcc make -y
 ##Téléchargement de la bonne version de l'agent
 
 cd /root/
