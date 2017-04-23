@@ -24,9 +24,9 @@ machineName=$(cat /etc/hostname)
 
 ##Variables
 read -p "Entrer le nom de l'utilisateur : " username
-username2="web"
+#username2="web"
 #Concaténation username + web
-userPool="${username}${username2}"
+#userPool="${username}${username2}"
 infoFile="/root/$username.info"
 [[ -f ${infoFile} ]] && echo "A UNIX user should already exist with this name. Aborted." && echo exit 1
 
@@ -74,7 +74,7 @@ mkdir /home/$username/{www,tmp,logs,sessions,.socks,cgi-bin}
 chown -R $username:$username /home/$username/{www,tmp,logs,sessions,.socks,cgi-bin}
 
 ##Création du user pour le pool FPM
-useradd -s /bin/false ${userPool}
+#useradd -s /bin/false ${userPool}
 
 case $servWeb in
   1*)
@@ -400,7 +400,7 @@ echo -e "Création du pool FPM\n"
 if [ ! -f /etc/php5/fpm/pool.d/${username}.conf ]
 then
   cat >>  /etc/php5/fpm/pool.d/${username}.conf << _EOF_
-[$userPool]
+[$username]
 
 ; Per pool prefix
 ; It only applies on the following directives:
@@ -567,12 +567,13 @@ else
   chmod 700 /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh && /root/scripts/Shell/web/ftp/createFtpUserWithQuota.sh
 fi
 
-if [ -d /home/${username}/www/sites/default/files ]
-then
-  echo "Changement de permission de /default/files"
-  chown -R ${userPool}:${userPool} /home/${username}/www/sites/default/files
-fi
+#if [ -d /home/${username}/www/sites/default/files ]
+#then
+#  echo "Changement de permission de /default/files"
+#  chown -R ${userPool}:${userPool} /home/${username}/www/sites/default/files
+#fi
 
+:<<comment
 ##Création des ACL
 
 if [ ! -f /root/aclFiles.lst ] || [ ! -f /root/aclLogs.lst ]
@@ -603,6 +604,8 @@ else
   echo "Les fichiers d'ACL ont déjà été créés"
 fi
 
+comment
+
 ##SSH-Keygen
 
 runuser -l $username -c 'ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa'
@@ -616,8 +619,6 @@ echo "----------------------------------------------------
 
       UNIX username     : ${username}
       UNIX password     : ${unix_passwd}
-      USER FPM          : ${userPool}
-
       SQL username      : ${username}
       SQL Database      : ${username}
       SQL password      : ${sql_passwd}
