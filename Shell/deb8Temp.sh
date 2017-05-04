@@ -784,6 +784,7 @@ sed -i -e 's/^relayhost/#relayhost/g' /etc/postfix/main.cf
 log "Install Pureftpd : OK"
 
 ## Install drush
+: <<'COM'
 cd  /root
 installPackage curl
 curl -sS https://getcomposer.org/installer | php
@@ -796,6 +797,7 @@ ln -s /usr/local/src/drush/drush /usr/local/bin/drush
 composer install
 drush --version
 log "Install drush version 7.3.0: OK"
+COM
 
 ## Install Firewall
 cp /root/scripts/Banned/firewall.sh /etc/init.d/firewall 
